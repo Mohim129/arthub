@@ -1,0 +1,32 @@
+export const adminUsers = [
+  {
+    id: 1,
+    name: "Alex L.",
+    email: "alex@arthub.com",
+    role: "Collector",
+    status: "Active",
+    lastActive: "2 hours ago",
+    initials: "AL",
+    color: "primary",
+  },
+  {
+    id: 2,
+    name: "Sarah P.",
+    email: "sarah@creative.art",
+    role: "Artist",
+    status: "Active",
+    lastActive: "5 mins ago",
+    initials: "SP",
+    color: "secondary",
+  },
+  {
+    id: 3,
+    name: "Marcus K.",
+    email: "m.k@webmail.com",
+    role: "Admin",
+    status: "Pending",
+    lastActive: "1 day ago",
+    initials: "MK",
+    color: "tertiary",
+  },
+];
