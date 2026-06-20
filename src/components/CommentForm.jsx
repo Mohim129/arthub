@@ -15,10 +15,10 @@ export default function CommentForm({ onSubmit }) {
 
   return (
     <div className="flex gap-sm p-sm bg-surface-container-low rounded-xl">
-      <div className="w-10 h-10 rounded-full bg-primary-container/20 flex-shrink-0 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-full bg-primary-container/20 shrink-0 flex items-center justify-center">
         <Person className="text-primary" />
       </div>
-      <div className="flex-grow flex flex-col gap-sm">
+      <div className="grow flex flex-col gap-sm">
         <textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

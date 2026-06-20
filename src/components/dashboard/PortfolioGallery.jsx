@@ -10,7 +10,7 @@ export default function PortfolioGallery({ artworks }) {
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
               style={{ backgroundImage: `url('${artworks[0].image}')` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-inverse-surface/80 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 p-lg">
               <span className="bg-primary px-sm py-xs rounded-full font-label-caps text-label-caps text-on-primary mb-sm inline-block">
                 MOST VALUABLE
@@ -39,7 +39,7 @@ export default function PortfolioGallery({ artworks }) {
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
               style={{ backgroundImage: `url('${art.image}')` }}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-inverse-surface/80 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 p-md">
               <p className="font-h3 text-h3 font-bold text-white">
                 {art.title}

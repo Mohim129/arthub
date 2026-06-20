@@ -6,7 +6,7 @@ export default function Lightbox({ src, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-xl cursor-zoom-out"
+      className="fixed inset-0 bg-black/95 z-100 flex items-center justify-center p-xl cursor-zoom-out"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}

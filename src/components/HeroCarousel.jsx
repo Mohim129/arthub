@@ -60,7 +60,7 @@ export default function HeroCarousel() {
       >
         {slides.map((slide, idx) => (
           <div key={idx} className="min-w-full h-full relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent z-10" />
+            <div className="absolute inset-0 bg-linear-to-r from-black/70 to-transparent z-10" />
             <div
               className="absolute inset-0 bg-cover bg-center"
               style={{ backgroundImage: `url('${slide.background}')` }}
@@ -69,7 +69,7 @@ export default function HeroCarousel() {
               <h1 className="text-[56px] leading-tight max-w-2xl mb-6 font-bold">
                 {slide.title}
               </h1>
-              <p className="text-xl max-w-xl mb-12 opacity-90">
+              <p className="text-xl max-w-[28rem] mb-12 opacity-90">
                 {slide.subtitle}
               </p>
               <Button

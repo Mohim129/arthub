@@ -8,7 +8,7 @@ export default function CommentList({ comments }) {
           key={comment.id}
           className="flex gap-md p-md bg-white border border-surface-container rounded-xl shadow-sm"
         >
-          <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+          <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container shrink-0">
             <img
               src={comment.avatar}
               alt={comment.user}

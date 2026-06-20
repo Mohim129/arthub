@@ -6,7 +6,7 @@ export default function SkeletonCard() {
       className="bg-surface rounded-xl overflow-hidden shadow-sm"
       shadow="none"
     >
-      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <Skeleton className="aspect-4/3 w-full rounded-none" />
       <div className="flex flex-col gap-4 p-4">
         <Skeleton className="h-6 w-2/3 rounded" />
         <Skeleton className="h-4 w-1/3 rounded" />

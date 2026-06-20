@@ -1,4 +1,4 @@
-import { Button, Input } from "@heroui/react";
+import { Button } from "@heroui/react";
 
 export default function NewsletterCTA() {
   return (
@@ -8,14 +8,14 @@ export default function NewsletterCTA() {
           <h2 className="font-h1-desktop text-h1-desktop mb-md">
             Stay Curated
           </h2>
-          <p className="font-body-large opacity-80 max-w-md">
+          <p className="font-body-large opacity-80">
             Join our exclusive newsletter to receive early access to new
             collections and artist spotlights.
           </p>
         </div>
         <div className="flex gap-sm sm:flex-row flex-col">
-          <Input
-            className="flex-grow bg-white/10 border border-white/20 rounded-lg px-md py-4 focus:ring-2 focus:ring-primary-fixed outline-none text-white"
+          <input
+            className="grow bg-white/10 border border-white/20 rounded-lg px-md py-4 focus:ring-2 focus:ring-primary-fixed outline-none text-white placeholder-white/50"
             placeholder="Enter your email"
             type="email"
           />

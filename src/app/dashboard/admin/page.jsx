@@ -4,18 +4,18 @@ import AdminDashboardTabs from "@/components/dashboard/AdminDashboardTabs";
 
 export default function AdminDashboard() {
   return (
-    <DashboardLayout
-      role="admin"
-      userName="Admin"
-      userRole="Administrator"
-      avatar={null}
-      sidebarClassName="bg-inverse-surface text-white"
+    <Suspense
+      fallback={<div className="text-center py-20">Loading dashboard...</div>}
     >
-      <Suspense
-        fallback={<div className="text-center py-20">Loading dashboard...</div>}
+      <DashboardLayout
+        role="admin"
+        userName="Admin"
+        userRole="Administrator"
+        avatar={null}
+        sidebarClassName="bg-inverse-surface text-white"
       >
         <AdminDashboardTabs />
-      </Suspense>
-    </DashboardLayout>
+      </DashboardLayout>
+    </Suspense>
   );
 }

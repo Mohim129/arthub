@@ -42,7 +42,7 @@ export default function ArtworkTable({ artworks }) {
                 >
                   <td className="p-md">
                     <div className="flex items-center gap-md">
-                      <div className="w-12 h-12 rounded bg-surface-variant overflow-hidden flex-shrink-0">
+                      <div className="w-12 h-12 rounded bg-surface-variant overflow-hidden shrink-0">
                         <img
                           className="w-full h-full object-cover"
                           alt={artwork.title}

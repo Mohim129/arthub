@@ -9,7 +9,7 @@ export default function ArtworkCard({ artwork }) {
       shadow="none"
     >
       <div className="relative overflow-hidden">
-        <div className="aspect-[4/3] overflow-hidden">
+        <div className="aspect-4/3 overflow-hidden">
           <img
             alt={artwork.title}
             src={artwork.image}

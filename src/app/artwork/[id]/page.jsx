@@ -56,7 +56,7 @@ export default function ArtworkDetailPage() {
           {/* Left: Large Image with Zoom */}
           <div className="relative group overflow-hidden rounded-xl bg-surface-container-low shadow-sm">
             <div
-              className="zoom-container overflow-hidden cursor-zoom-in aspect-[4/5] relative bg-surface-container-highest"
+              className="zoom-container overflow-hidden cursor-zoom-in aspect-4/5 relative bg-surface-container-highest"
               onClick={() => setLightboxSrc(artwork.image)}
               onMouseMove={handleMouseMove}
             >
@@ -65,7 +65,7 @@ export default function ArtworkDetailPage() {
                 alt={artwork.title}
                 src={artwork.image}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-md">
+              <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-md">
                 <span className="text-white text-body-small flex items-center gap-xs">
                   <Magnifier className="text-[18px]" />
                   Click to expand
@@ -146,7 +146,7 @@ export default function ArtworkDetailPage() {
             {artwork.isOwner && (
               <div className="flex items-center gap-sm border-l-4 border-primary px-md py-sm bg-surface-container-highest/30 rounded-r-lg">
                 <Pencil className="text-primary" />
-                <div className="flex-grow">
+                <div className="grow">
                   <p className="font-semibold text-body-large">
                     Artist Management
                   </p>

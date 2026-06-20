@@ -19,7 +19,7 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen flex relative">
       <button
-        className="md:hidden fixed top-24 left-4 z-50 bg-surface shadow-md p-2 rounded-lg border border-outline-variant"
+        className="md:hidden fixed top-24 left-4 z-40 bg-surface shadow-md p-2 rounded-lg border border-outline-variant"
         onClick={() => setSidebarOpen(!sidebarOpen)}
         aria-label="Toggle sidebar"
       >
@@ -34,7 +34,7 @@ export default function DashboardLayout({
       )}
 
       <div
-        className={`fixed top-20 left-0 z-50 h-[calc(100vh-80px)] w-64 transform transition-transform duration-300 md:sticky md:translate-x-0 md:flex md:flex-shrink-0 ${sidebarClassName || ""} ${
+        className={`fixed top-20 left-0 z-40 h-[calc(100vh-80px)] w-64 transform transition-transform duration-300 md:sticky md:translate-x-0 md:flex md:flex-shrink-0 ${sidebarClassName || ""} ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
