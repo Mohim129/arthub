@@ -36,10 +36,10 @@ export default function FilterBar({ onFilterChange }) {
   };
 
   return (
-    <div className="bg-surface-container-low dark:bg-inverse-surface/40 rounded-xl p-md mb-lg shadow-sm border border-outline-variant/30 dark:border-outline-variant/10">
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-md items-end">
+    <div className="bg-surface-container-low dark:bg-inverse-surface/40 rounded-xl p-sm md:p-md mb-sm md:mb-lg shadow-sm border border-outline-variant/30 dark:border-outline-variant/10">
+      <div className="grid grid-cols-2 md:grid-cols-12 gap-sm md:gap-md items-end">
         {/* Search Field */}
-        <div className="md:col-span-4 relative">
+        <div className="col-span-2 md:col-span-4 relative">
           <label className="block font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant mb-xs">
             Search Artworks
           </label>
@@ -48,7 +48,7 @@ export default function FilterBar({ onFilterChange }) {
             <Input
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-md py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-large text-on-surface dark:text-inverse-on-surface"
+              className="w-full pl-10 pr-md py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-large text-on-surface dark:text-inverse-on-surface"
               placeholder="Title, Artist, or Keywords"
               type="text"
             />
@@ -56,14 +56,14 @@ export default function FilterBar({ onFilterChange }) {
         </div>
 
         {/* Category Dropdown */}
-        <div className="md:col-span-2">
+        <div className="col-span-1 md:col-span-2">
           <label className="block font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant mb-xs">
             Category
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full px-md py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 text-on-surface dark:text-inverse-on-surface border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all font-body-large appearance-none"
+            className="w-full px-sm md:px-md py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 text-on-surface dark:text-inverse-on-surface border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all font-body-large appearance-none"
           >
             <option className="bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface">All Media</option>
             <option className="bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface">Digital Painting</option>
@@ -74,7 +74,7 @@ export default function FilterBar({ onFilterChange }) {
         </div>
 
         {/* Price Range */}
-        <div className="md:col-span-3">
+        <div className="col-span-2 md:col-span-3">
           <label className="block font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant mb-xs">
             Price Range ($)
           </label>
@@ -82,7 +82,7 @@ export default function FilterBar({ onFilterChange }) {
             <Input
               value={priceMin}
               onChange={(e) => setPriceMin(e.target.value)}
-              className="w-full px-base py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-large text-on-surface dark:text-inverse-on-surface"
+              className="w-full px-base py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-large text-on-surface dark:text-inverse-on-surface"
               placeholder="Min"
               type="number"
             />
@@ -90,7 +90,7 @@ export default function FilterBar({ onFilterChange }) {
             <Input
               value={priceMax}
               onChange={(e) => setPriceMax(e.target.value)}
-              className="w-full px-base py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-large text-on-surface dark:text-inverse-on-surface"
+              className="w-full px-base py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none font-body-large text-on-surface dark:text-inverse-on-surface"
               placeholder="Max"
               type="number"
             />
@@ -98,14 +98,14 @@ export default function FilterBar({ onFilterChange }) {
         </div>
 
         {/* Sort By */}
-        <div className="md:col-span-2">
+        <div className="col-span-1 md:col-span-2">
           <label className="block font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant mb-xs">
             Sort By
           </label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
-            className="w-full px-md py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 text-on-surface dark:text-inverse-on-surface border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all font-body-large appearance-none"
+            className="w-full px-sm md:px-md py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 text-on-surface dark:text-inverse-on-surface border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all font-body-large appearance-none"
           >
             <option className="bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface">Newest First</option>
             <option className="bg-surface dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface">Price: Low to High</option>
@@ -115,10 +115,10 @@ export default function FilterBar({ onFilterChange }) {
         </div>
 
         {/* Filter Action */}
-        <div className="md:col-span-1">
+        <div className="col-span-2 md:col-span-1">
           <Button
             onPress={handleFilter}
-            className="w-full h-[46px] flex items-center justify-center bg-primary text-on-primary rounded-lg hover:opacity-90 active:scale-95 transition-all"
+            className="w-full h-[40px] md:h-[46px] flex items-center justify-center bg-primary text-on-primary rounded-lg hover:opacity-90 active:scale-95 transition-all"
           >
             <Sliders />
           </Button>
