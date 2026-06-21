@@ -2,7 +2,16 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@heroui/react";
-import { Person, Envelope, Lock, Camera } from "@gravity-ui/icons";
+import {
+  Person,
+  Envelope,
+  Lock,
+  Camera,
+  Eye,
+  EyeSlash,
+} from "@gravity-ui/icons";
+import { authClient } from "@/lib/auth-client"; // adjust path if needed
+import toast, { Toaster } from "react-hot-toast";
 
 export default function SignUp() {
   const [name, setName] = useState("");
@@ -11,21 +20,65 @@ export default function SignUp() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [role, setRole] = useState("buyer");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error: signUpError } = await authClient.signUp.email({
+        email,
+        password,
+        name,
+        role,
+        image: imageUrl || undefined,
+      });
+
+      if (signUpError) {
+        toast.error(signUpError.message || "Sign up failed.");
+        return;
+      }
+
+      toast.success("Account created! Redirecting…");
+      setTimeout(() => {
+        window.location.href = "/signin";
+      }, 1500);
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-20 px-gutter bg-background">
-      <div className="w-full max-w-[28rem] bg-surface rounded-xl shadow-lg p-lg border border-outline-variant/20">
+    <div className="min-h-screen flex items-center justify-center py-10 md:py-20 px-gutter bg-background">
+      <Toaster position="top-right" toastOptions={{ className: "text-sm" }} />
+      <div className="w-full max-w-[28rem] bg-surface rounded-xl shadow-lg p-md md:p-lg border border-outline-variant/20">
+        {/* Logo & title */}
         <div className="text-center mb-lg">
           <Link
             href="/"
-            className="font-h1-desktop text-h1-desktop font-bold text-primary"
+            className="font-h1-desktop text-h1-mobile md:text-h1-desktop font-bold text-primary"
           >
             ArtHub
           </Link>
           <p className="text-on-surface-variant mt-sm">Create your account</p>
         </div>
 
-        <form className="space-y-md" onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Full Name */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
@@ -62,10 +115,13 @@ export default function SignUp() {
             </div>
           </div>
 
-          {/* Profile Image URL */}
+          {/* Profile Image URL – optional */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-              Profile Image URL
+              Profile Image URL{" "}
+              <span className="font-normal normal-case tracking-normal text-outline">
+                (optional)
+              </span>
             </label>
             <div className="relative">
               <Camera className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
@@ -79,7 +135,7 @@ export default function SignUp() {
             </div>
           </div>
 
-          {/* Password */}
+          {/* Password with visibility toggle */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
               Password
@@ -87,17 +143,29 @@ export default function SignUp() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
               <input
-                type="password"
-                placeholder="••••••••"
+                type={showPassword ? "text" : "password"}
+                placeholder="•••••••• (min. 8 characters)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? (
+                  <EyeSlash className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
 
-          {/* Confirm Password */}
+          {/* Confirm Password with visibility toggle */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
               Confirm Password
@@ -105,13 +173,25 @@ export default function SignUp() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                aria-label="Toggle confirm password visibility"
+              >
+                {showConfirmPassword ? (
+                  <EyeSlash className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -120,11 +200,11 @@ export default function SignUp() {
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
               I am a
             </label>
-            <div className="flex gap-sm mt-1">
+            <div className="flex gap-2 mt-1">
               <button
                 type="button"
                 onClick={() => setRole("buyer")}
-                className={`flex-1 py-sm px-lg rounded-lg font-semibold border-2 transition-all ${
+                className={`flex-1 py-2 px-3 sm:py-2 sm:px-4 rounded-lg font-semibold border-2 transition-all text-sm ${
                   role === "buyer"
                     ? "border-primary bg-primary-container text-on-primary"
                     : "border-outline-variant text-on-surface-variant hover:border-primary"
@@ -135,7 +215,7 @@ export default function SignUp() {
               <button
                 type="button"
                 onClick={() => setRole("artist")}
-                className={`flex-1 py-sm px-lg rounded-lg font-semibold border-2 transition-all ${
+                className={`flex-1 py-2 px-3 sm:py-2 sm:px-4 rounded-lg font-semibold border-2 transition-all text-sm ${
                   role === "artist"
                     ? "border-primary bg-primary-container text-on-primary"
                     : "border-outline-variant text-on-surface-variant hover:border-primary"
@@ -150,8 +230,9 @@ export default function SignUp() {
             type="submit"
             color="primary"
             className="w-full font-bold mt-4"
+            isLoading={loading}
           >
-            Sign Up
+            {loading ? "Creating account..." : "Sign Up"}
           </Button>
         </form>
 
@@ -161,6 +242,7 @@ export default function SignUp() {
           <hr className="flex-1 border-outline-variant" />
         </div>
 
+        {/* Google OAuth placeholder */}
         <Button
           variant="bordered"
           className="w-full border-outline-variant text-on-surface font-semibold hover:bg-surface-container-low transition-colors"

@@ -2,19 +2,50 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@heroui/react";
-import { Envelope, Lock } from "@gravity-ui/icons";
+import { Envelope, Lock, Eye, EyeSlash } from "@gravity-ui/icons";
+import { authClient } from "@/lib/auth-client"; // adjust path if needed
+import toast, { Toaster } from "react-hot-toast";
 
 export default function SignIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const { data, error } = await authClient.signIn.email({
+        email,
+        password,
+      });
+
+      if (error) {
+        toast.error(error.message || "Invalid email or password.");
+        return;
+      }
+
+      toast.success("Signed in successfully! Redirecting…");
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 1500);
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-20 px-gutter bg-background">
-      <div className="w-full max-w-[28rem] bg-surface rounded-xl shadow-lg p-lg border border-outline-variant/20">
+    <div className="min-h-screen flex items-center justify-center py-10 md:py-20 px-gutter bg-background">
+      <Toaster position="top-right" toastOptions={{ className: "text-sm" }} />
+      <div className="w-full max-w-[28rem] bg-surface rounded-xl shadow-lg p-md md:p-lg border border-outline-variant/20">
         <div className="text-center mb-lg">
           <Link
             href="/"
-            className="font-h1-desktop text-h1-desktop font-bold text-primary"
+            className="font-h1-desktop text-h1-mobile md:text-h1-desktop font-bold text-primary"
           >
             ArtHub
           </Link>
@@ -23,7 +54,7 @@ export default function SignIn() {
           </p>
         </div>
 
-        <form className="space-y-md" onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
@@ -42,7 +73,7 @@ export default function SignIn() {
             </div>
           </div>
 
-          {/* Password */}
+          {/* Password with visibility toggle */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
               Password
@@ -50,13 +81,25 @@ export default function SignIn() {
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                aria-label="Toggle password visibility"
+              >
+                {showPassword ? (
+                  <EyeSlash className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -64,8 +107,9 @@ export default function SignIn() {
             type="submit"
             color="primary"
             className="w-full font-bold mt-4"
+            isLoading={loading}
           >
-            Sign In
+            {loading ? "Signing in..." : "Sign In"}
           </Button>
         </form>
 
@@ -75,6 +119,7 @@ export default function SignIn() {
           <hr className="flex-1 border-outline-variant" />
         </div>
 
+        {/* Google OAuth placeholder */}
         <Button
           variant="bordered"
           className="w-full border-outline-variant text-on-surface font-semibold hover:bg-surface-container-low transition-colors"
