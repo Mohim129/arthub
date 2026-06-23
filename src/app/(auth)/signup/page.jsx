@@ -205,7 +205,7 @@ export default function SignUp() {
                 type="button"
                 onClick={() => setRole("buyer")}
                 className={`flex-1 py-2 px-3 sm:py-2 sm:px-4 rounded-lg font-semibold border-2 transition-all text-sm ${
-                  role === "buyer"
+                  role === "user"
                     ? "border-primary bg-primary-container text-on-primary"
                     : "border-outline-variant text-on-surface-variant hover:border-primary"
                 }`}

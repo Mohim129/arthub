@@ -1,6 +1,6 @@
 import { Pencil, TrashBin, ArrowRight } from "@gravity-ui/icons";
 
-export default function ArtworkTable({ artworks }) {
+export default function ArtworkTable({ artworks, onEdit = null, onDelete = null }) {
   return (
     <section>
       <div className="flex justify-between items-end mb-md">
@@ -68,10 +68,16 @@ export default function ArtworkTable({ artworks }) {
                   </td>
                   <td className="p-md text-right">
                     <div className="flex justify-end gap-sm">
-                      <button className="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container-high">
+                      <button 
+                        onClick={() => onEdit && onEdit(artwork)}
+                        className="text-on-surface-variant hover:text-primary transition-colors p-xs rounded-full hover:bg-surface-container-high cursor-pointer"
+                      >
                         <Pencil />
                       </button>
-                      <button className="text-error hover:opacity-70 transition-colors p-xs rounded-full hover:bg-error-container">
+                      <button 
+                        onClick={() => onDelete && onDelete(artwork.id)}
+                        className="text-error hover:opacity-70 transition-colors p-xs rounded-full hover:bg-error-container cursor-pointer"
+                      >
                         <TrashBin />
                       </button>
                     </div>

@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import PurchaseHistoryTable from "./PurchaseHistoryTable";
 import SubscriptionTiers from "./SubscriptionTiers";
 import PortfolioGallery from "./PortfolioGallery";
+import ProfileSettings from "../ProfileSettings";
 import { userPurchases } from "@/data/userPurchases";
 import { boughtArtworks } from "@/data/boughtArtworks";
 
@@ -15,12 +16,12 @@ export default function UserDashboardTabs() {
       {tab === "history" && <PurchaseHistoryTable purchases={userPurchases} />}
       {tab === "bought" && <PortfolioGallery artworks={boughtArtworks} />}
       {tab === "profile" && (
-        <section>
-          <h2 className="font-h2 text-h2 mb-md">Profile Settings</h2>
-          <p className="text-on-surface-variant">
-            Update your profile details and change password.
-          </p>
-        </section>
+        <ProfileSettings
+          initialName="Alex Rivera"
+          initialEmail="alex.r@email.com"
+          initialBio="Passionate art collector and curator."
+          initialAvatar=""
+        />
       )}
       {tab === "subscription" && <SubscriptionTiers />}
     </div>

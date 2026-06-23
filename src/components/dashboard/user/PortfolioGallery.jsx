@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function PortfolioGallery({ artworks }) {
   return (
     <section className="flex flex-col gap-md">
@@ -5,7 +7,10 @@ export default function PortfolioGallery({ artworks }) {
       <div className="grid grid-cols-1 md:grid-cols-4 grid-rows-2 gap-md h-[500px]">
         {/* Use the first artwork as large featured one */}
         {artworks.length > 0 && (
-          <div className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden group">
+          <Link
+            href={`/artwork/${artworks[0].id}`}
+            className="md:col-span-2 md:row-span-2 relative rounded-xl overflow-hidden group block cursor-pointer"
+          >
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
               style={{ backgroundImage: `url('${artworks[0].image}')` }}
@@ -22,14 +27,15 @@ export default function PortfolioGallery({ artworks }) {
                 Acquired: {artworks[0].date}
               </p>
             </div>
-          </div>
+          </Link>
         )}
 
         {/* Remaining artworks */}
         {artworks.slice(1).map((art) => (
-          <div
+          <Link
             key={art.id}
-            className={`relative rounded-xl overflow-hidden group ${
+            href={`/artwork/${art.id}`}
+            className={`relative rounded-xl overflow-hidden group block cursor-pointer ${
               artworks.length === 4 && art.id === artworks[2]?.id
                 ? "md:col-span-2"
                 : "md:col-span-1"
@@ -50,7 +56,7 @@ export default function PortfolioGallery({ artworks }) {
                 </p>
               )}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </section>
