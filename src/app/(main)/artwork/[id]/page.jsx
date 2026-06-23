@@ -12,7 +12,7 @@ import {
   Xmark,
   Magnifier,
 } from "@gravity-ui/icons";
-import { artworkDetail } from "@/data/artworkDetail";
+import { browseArtworks } from "@/data/browseArtworks";
 import { comments as initialComments } from "@/data/comments";
 import Lightbox from "@/components/Lightbox";
 import CommentForm from "@/components/CommentForm";
@@ -20,9 +20,26 @@ import CommentList from "@/components/CommentList";
 
 export default function ArtworkDetailPage() {
   const params = useParams();
-  // Replace this with an API call later using params.id
-  const artwork = artworkDetail;
+  
+  // Dynamically look up the artwork in browseArtworks based on params.id
+  const baseArtwork = browseArtworks.find(art => String(art.id) === String(params?.id)) || browseArtworks[0];
+  
+  const artwork = {
+    ...baseArtwork,
+    artist: typeof baseArtwork.artist === 'object' ? baseArtwork.artist : {
+      name: baseArtwork.artist || "Unknown Artist",
+      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2t14hOWH-EDmyx3ptoLEo_orUacfSYVKU7lvUJ643h7JNnLLJTFHSAlnglCaUbTIFEESg2LghsNWOrPyx-8n-JTFrZxNrzktrP4Q_aj7aI4K41k3cabJl7mPe99dVY2Tc0kXaNm5J2xqEoLwQDYs4zxVrq_yWT29glEmo9i2NYqWypCoqVgaBz2Es_ybcTaoerJLoLIzo3WoNxmc1TUmjgtAei7t_PuOaiGLwDjZ0ohustgcxiQsGBXlGUMJG3ux5EvLR-k8_cHcA"
+    },
+    date: baseArtwork.date || "October 24, 2024",
+    price: typeof baseArtwork.price === 'number' ? `$${baseArtwork.price.toLocaleString()}` : baseArtwork.price,
+    usdPrice: typeof baseArtwork.price === 'number' ? `$${baseArtwork.price.toLocaleString()}` : baseArtwork.usdPrice || "$1,200.00",
+    description: baseArtwork.description || "'Eternal Synthesis' explores the convergence of organic movement and digital precision. This piece was algorithmically generated and then hand-curated to capture the exact moment of harmonic collision between opposing chromatic forces. It serves as a commentary on the fluidity of our digital existence in a rigid physical world.",
+    isOwner: baseArtwork.isOwner !== undefined ? baseArtwork.isOwner : true,
+    hasPurchased: baseArtwork.hasPurchased !== undefined ? baseArtwork.hasPurchased : true,
+  };
+
   const [comments, setComments] = useState(initialComments);
+  const [hasPurchased, setHasPurchased] = useState(artwork.hasPurchased);
   const [lightboxSrc, setLightboxSrc] = useState(null);
 
   const handleMouseMove = useCallback((e) => {
@@ -34,6 +51,11 @@ export default function ArtworkDetailPage() {
     const y = ((e.pageY - top) / height) * 100;
     img.style.transformOrigin = `${x}% ${y}%`;
   }, []);
+
+  const handlePurchase = () => {
+    if (hasPurchased) return;
+    setHasPurchased(true);
+  };
 
   const handlePostComment = (text) => {
     setComments((prev) => [
@@ -130,15 +152,26 @@ export default function ArtworkDetailPage() {
               <p className="text-on-surface-variant text-body-small">
                 Approximately {artwork.usdPrice} USD at current market rates.
               </p>
-              <Button className="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-[0.98]">
+              <Button
+                onPress={handlePurchase}
+                disabled={hasPurchased}
+                className="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:bg-surface disabled:text-on-surface disabled:shadow-none"
+              >
                 <ShoppingBag />
-                Purchase Artwork
+                {hasPurchased ? "Purchased" : "Purchase Artwork"}
               </Button>
-              <div className="flex items-center gap-sm justify-center py-xs border-t border-surface-variant/50 mt-xs">
-                <ShieldCheck className="text-primary text-[18px]" />
+              <div className="flex flex-col gap-2 justify-center py-xs border-t border-surface-variant/50 mt-xs">
                 <span className="text-body-small text-on-surface-variant">
-                  Verified Authentic Digital Asset
+                  {hasPurchased
+                    ? "You now own this artwork and can join the collector conversation."
+                    : "Purchase now to unlock comments and full ownership benefits."}
                 </span>
+                <div className="flex items-center gap-sm justify-center">
+                  <ShieldCheck className="text-primary text-[18px]" />
+                  <span className="text-body-small text-on-surface-variant">
+                    Verified Authentic Digital Asset
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -184,7 +217,7 @@ export default function ArtworkDetailPage() {
                 </span>
               </div>
 
-              {artwork.hasPurchased ? (
+              {hasPurchased ? (
                 <CommentForm onSubmit={handlePostComment} />
               ) : (
                 <p className="text-on-surface-variant text-body-small italic">

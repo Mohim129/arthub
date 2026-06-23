@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { browseArtworks } from "@/data/browseArtworks";
 import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
-import SkeletonCard from "@/components/SkeletonCard";
+import BrowseLoading from "./loading";
 import { Card, Button, Input } from "@heroui/react";
 import { Heart, ShoppingCart, Magnifier, Sliders, Xmark } from "@gravity-ui/icons";
 import Link from "next/link";
@@ -51,11 +51,13 @@ export default function BrowsePage() {
   };
 
   const handlePriceMinChange = (val) => {
+    if (val !== "" && Number(val) < 0) return;
     setPriceMin(val);
     setIsLoading(true);
   };
 
   const handlePriceMaxChange = (val) => {
+    if (val !== "" && Number(val) < 0) return;
     setPriceMax(val);
     setIsLoading(true);
   };
@@ -81,8 +83,7 @@ export default function BrowsePage() {
         setShowEmpty(true);
         setFilteredArtworks([]);
         setCurrentPage(1);
-        // Commented out to simulate a persistent loading page for later use
-        // setIsLoading(false);
+        setIsLoading(false);
       }, 400);
       return;
     }
@@ -127,9 +128,7 @@ export default function BrowsePage() {
       setShowEmpty(results.length === 0);
       setFilteredArtworks(results);
       setCurrentPage(1);
-      
-      // NOTE: Uncomment this line to stop loading skeletons when you implement actual data fetching.
-      // setIsLoading(false);
+      setIsLoading(false);
     }, 400);
 
     return () => {
@@ -300,6 +299,7 @@ export default function BrowsePage() {
                   onChange={(e) => handlePriceMinChange(e.target.value)}
                   placeholder="Min"
                   type="number"
+                  min={0}
                   variant="bordered"
                   size="sm"
                   className="w-full"
@@ -310,6 +310,7 @@ export default function BrowsePage() {
                   onChange={(e) => handlePriceMaxChange(e.target.value)}
                   placeholder="Max"
                   type="number"
+                  min={0}
                   variant="bordered"
                   size="sm"
                   className="w-full"
@@ -338,72 +339,72 @@ export default function BrowsePage() {
             ) : (
               <>
                 {/* Results Grid - Responsive: 2 cols on mobile, 3 on tablet, 4 on desktop */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-sm md:gap-lg">
-                  {isLoading
-                    ? Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
-                        <SkeletonCard key={i} />
-                      ))
-                    : paginatedArtworks.map((artwork) => (
-                        <Link
-                          key={artwork.id}
-                          href={`/artwork/${artwork.id}`}
-                          className="block group"
+                {isLoading ? (
+                  <BrowseLoading />
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-sm md:gap-lg">
+                    {paginatedArtworks.map((artwork) => (
+                      <Link
+                        key={artwork.id}
+                        href={`/artwork/${artwork.id}`}
+                        className="block group"
+                      >
+                        <Card
+                          className="art-card-hover art-card-img-scale bg-surface-container-lowest dark:bg-inverse-surface/40 rounded-xl overflow-hidden transition-all duration-300 border border-outline-variant/20 dark:border-outline-variant/10 shadow-sm cursor-pointer"
+                          shadow="none"
                         >
-                          <Card
-                            className="art-card-hover art-card-img-scale bg-surface-container-lowest dark:bg-inverse-surface/40 rounded-xl overflow-hidden transition-all duration-300 border border-outline-variant/20 dark:border-outline-variant/10 shadow-sm cursor-pointer"
-                            shadow="none"
-                          >
-                            <div className="relative aspect-square overflow-hidden bg-surface-variant">
-                              <img
-                                alt={artwork.title}
-                                src={artwork.image}
-                                className="w-full h-full object-cover transition-transform duration-500"
-                              />
-                              <div className="absolute top-2 right-2 md:top-3 md:right-3">
-                                <Button
-                                  isIconOnly
-                                  className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface/80 backdrop-blur flex items-center justify-center text-on-surface dark:text-inverse-on-surface hover:text-error transition-colors"
-                                  variant="light"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  <Heart className="w-4 h-4 md:w-5 md:h-5" />
-                                </Button>
-                              </div>
+                          <div className="relative aspect-square overflow-hidden bg-surface-variant">
+                            <img
+                              alt={artwork.title}
+                              src={artwork.image}
+                              className="w-full h-full object-cover transition-transform duration-500"
+                            />
+                            <div className="absolute top-2 right-2 md:top-3 md:right-3">
+                              <Button
+                                isIconOnly
+                                className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-surface/80 backdrop-blur flex items-center justify-center text-on-surface dark:text-inverse-on-surface hover:text-error transition-colors"
+                                variant="light"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <Heart className="w-4 h-4 md:w-5 md:h-5" />
+                              </Button>
                             </div>
-                            <div className="p-sm md:p-md">
-                              <span className="text-[10px] md:text-label-caps font-label-caps text-secondary dark:text-secondary-fixed mb-xs block">
-                                {artwork.category}
+                          </div>
+                          <div className="p-sm md:p-md">
+                            <span className="text-[10px] md:text-label-caps font-label-caps text-secondary dark:text-secondary-fixed mb-xs block">
+                              {artwork.category}
+                            </span>
+                            <h3 className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors truncate">
+                              {artwork.title}
+                            </h3>
+                            <p className="font-body-small text-body-small text-on-surface-variant dark:text-outline-variant mt-xs">
+                              by {artwork.artist}
+                            </p>
+                            <div className="mt-sm pt-sm md:mt-md md:pt-md border-t border-outline-variant dark:border-outline-variant/20 flex justify-between items-center">
+                              <span className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface">
+                                ${artwork.price.toLocaleString()}
                               </span>
-                              <h3 className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors truncate">
-                                {artwork.title}
-                              </h3>
-                              <p className="font-body-small text-body-small text-on-surface-variant dark:text-outline-variant mt-xs">
-                                by {artwork.artist}
-                              </p>
-                              <div className="mt-sm pt-sm md:mt-md md:pt-md border-t border-outline-variant dark:border-outline-variant/20 flex justify-between items-center">
-                                <span className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface">
-                                  ${artwork.price.toLocaleString()}
-                                </span>
-                                <Button
-                                  isIconOnly
-                                  variant="light"
-                                  className="text-primary dark:text-primary-fixed-dim w-8 h-8 min-w-8 md:w-10 md:h-10 md:min-w-10"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
-                                </Button>
-                              </div>
+                              <Button
+                                isIconOnly
+                                variant="light"
+                                className="text-primary dark:text-primary-fixed-dim w-8 h-8 min-w-8 md:w-10 md:h-10 md:min-w-10"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                }}
+                              >
+                                <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                              </Button>
                             </div>
-                          </Card>
-                        </Link>
-                      ))}
-                </div>
+                          </div>
+                        </Card>
+                      </Link>
+                    ))}
+                  </div>
+                )}
 
                 {/* Pagination */}
                 {totalPages > 1 && (
@@ -487,6 +488,7 @@ export default function BrowsePage() {
                     onChange={(e) => handlePriceMinChange(e.target.value)}
                     placeholder="Min"
                     type="number"
+                    min={0}
                     variant="bordered"
                     size="sm"
                     className="w-full"
@@ -497,6 +499,7 @@ export default function BrowsePage() {
                     onChange={(e) => handlePriceMaxChange(e.target.value)}
                     placeholder="Max"
                     type="number"
+                    min={0}
                     variant="bordered"
                     size="sm"
                     className="w-full"

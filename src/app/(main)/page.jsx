@@ -1,5 +1,5 @@
 import { categories } from "@/data/categories";
-import { featuredArtworks } from "@/data/featuredArtworks";
+import { browseArtworks } from "@/data/browseArtworks";
 import { topArtists } from "@/data/topArtists";
 import HeroCarousel from "@/components/HeroCarousel";
 import CategoryCard from "@/components/CategoryCard";
@@ -51,7 +51,7 @@ export default function Home() {
               ? Array.from({ length: 6 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))
-              : featuredArtworks
+              : browseArtworks
                   .slice(0, 6)
                   .map((art) => <ArtworkCard key={art.id} artwork={art} />)}
           </div>

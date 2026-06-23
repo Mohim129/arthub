@@ -11,6 +11,7 @@ export default function DashboardLayout({
   userRole,
   avatar,
   sidebarClassName,
+  mainClassName,
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const searchParams = useSearchParams();
@@ -48,7 +49,7 @@ export default function DashboardLayout({
         />
       </div>
 
-      <main className="flex-1 p-md md:p-lg bg-surface max-w-full overflow-x-hidden">
+      <main className={`flex-1 p-md md:p-lg bg-surface max-w-full overflow-x-hidden ${mainClassName || ""}`}>
         {children}
       </main>
     </div>

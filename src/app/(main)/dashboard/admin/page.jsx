@@ -17,6 +17,7 @@ export default function AdminDashboard() {
         userRole="Administrator"
         avatar={session?.user?.image || null}
         sidebarClassName="bg-inverse-surface text-white"
+        mainClassName="dark:bg-inverse-surface/90"
       >
         <AdminDashboardTabs />
       </DashboardLayout>

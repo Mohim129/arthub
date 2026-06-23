@@ -11,8 +11,8 @@ import AdminArtworkTable from "./AdminArtworkTable";
 import AdminTransactionTable from "./AdminTransactionTable";
 import { adminStats } from "@/data/adminStats";
 import { adminUsers } from "@/data/adminUsers";
-import { adminArtworks } from "@/data/adminArtworks";
 import { adminTransactions } from "@/data/adminTransactions";
+import { browseArtworks } from "@/data/browseArtworks";
 
 export default function AdminDashboardTabs() {
   const searchParams = useSearchParams();
@@ -20,7 +20,12 @@ export default function AdminDashboardTabs() {
 
   // Local state management
   const [users, setUsers] = useState(adminUsers);
-  const [artworks, setArtworks] = useState(adminArtworks);
+  const [artworks, setArtworks] = useState(
+    browseArtworks.map((art) => ({
+      ...art,
+      price: typeof art.price === "number" ? `$${art.price.toLocaleString()}` : art.price,
+    }))
+  );
   const [transactions, setTransactions] = useState(adminTransactions);
 
   const handleRoleChange = (userId, newRole) => {
@@ -50,7 +55,7 @@ export default function AdminDashboardTabs() {
   };
 
   return (
-    <div className="max-w-full mx-auto space-y-xl">
+    <div className="admin-dashboard max-w-full mx-auto space-y-xl">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-xl gap-md">
         <div>
@@ -63,7 +68,7 @@ export default function AdminDashboardTabs() {
         </div>
         <Button 
           onClick={handleExportReport}
-          className="bg-primary text-on-primary px-lg py-sm rounded-lg shadow-sm hover:scale-95 transition-transform cursor-pointer"
+          className="bg-primary dark:bg-primary-container text-on-primary px-lg py-sm rounded-lg shadow-sm hover:scale-95 transition-transform cursor-pointer"
         >
           <File className="mr-1" />
           Export Report

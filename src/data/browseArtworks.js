@@ -79,7 +79,7 @@ export const browseArtworks = [
     price: 780,
     category: "Digital Painting",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAg0WZK3bNoZ6T1E3oXVmUe7xK_Z6M3jjK2cu_q7PcOjmc-d1Q-Q6x9AJNs6v3hcdqLvISrBtsWIyuBAYvA7QDJ0ueEPBShAu86lArHO-TOcVwkHQ3I2yHeamLF_4no_6vvHQ04i3CeShlTu06cOK-qHRcYPMNu4qYbsxIv3bVPtw7TB6tkExdIfmRH9HTzcInvZ-lq0KDwz2Jbija5b1Nzmjyno-_mzRCyLnI4ki0HF9y8PZgV75EzUNvWFiK4oxsADV9OzvrYJQFw",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuC7HUYeS7wuZvt-Jb2hHMzv-nDiF4exv7K6-0FyU_XJWl7xCQNzCi0oYvaiwPhB5NlLhP4buFQKsRMRrD4KUWZTZSl5czvJOe7egRAYlq7lPqtD9BoZdb3Ha1-YIp9RKQ0kEPMf_IqVIMWSLtcxt2bpRYSHVwUzYTVO-iHDsbHjcHvWd6v29yx5101U2ph1Te_xmmcZM9aDkf8P0HXzN0gLw1ilas6oVhZ14G4fTTKczXpkzbMvU-Fatk9JdQzqqQMdMe8rLTEX5F_U",
   },
   {
     id: 10,
@@ -88,7 +88,7 @@ export const browseArtworks = [
     price: 3200,
     category: "Generative Art",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuC7HUYeS7wuZvt-Jb2hHMzv-nDiF4exv7K6-0FyU_XJWl7xCQNzCi0oYvaiwPhB5NlLhP4buFQKsRMRrD4KUWZTZSl5czvJOe7egRAYlq7lPqtD9BoZdb3Ha1-YIp9RKQ0kEPMf_IqVIMWSLtcxt2bpRYSHVwUzYTVO-iHDsbHjcHvWd6v29yx5101U2ph1Te_xmmcZM9aDkf8P0HXzN0gLw1ilas6oVhZ14G4fTTKczXpkzbMvU-Fatk9JdQzqqQMdMe8rLTEX5F_U",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAB52v9IVn-kiWlFW_bX5XPgYqcFVd_d9UeVgH9ETrtblJziE9LI9gpGCZdxieUgfiCmGcpaxQbjAAlPZ-PoaPGngtZDi-eWWZynvxrN-78B1kj71YEsHshOxxH66R_rnEioo_rmkh2gufCoTBoRXFxzp0NXeGuIGRIP4go188L0gst2RFNg2dihhmxGNF1BjkfQ3h4wLz6IIaAgkRtCW5hH-s6VA4yxakEBenuWi5lfhYTvX3RnyAh8zYBMPvAypBd-y98NH1rQoU6",
   },
   {
     id: 11,
@@ -106,6 +106,6 @@ export const browseArtworks = [
     price: 980,
     category: "Digital Illustration",
     image:
-      "https://lh3.googleusercontent.com/aida-public/AB6AXuAB52v9IVn-kiWlFW_bX5XPgYqcFVd_d9UeVgH9ETrtblJziE9LI9gpGCZdxieUgfiCmGcpaxQbjAAlPZ-PoaPGngtZDi-eWWZynvxrN-78B1kj71YEsHshOxxH66R_rnEioo_rmkh2gufCoTBoRXFxzp0NXeGuIGRIP4go188L0gst2RFNg2dihhmxGNF1BjkfQ3h4wLz6IIaAgkRtCW5hH-s6VA4yxakEBenuWi5lfhYTvX3RnyAh8zYBMPvAypBd-y98NH1rQoU6",
+      "https://lh3.googleusercontent.com/aida-public/AB6AXuAg0WZK3bNoZ6T1E3oXVmUe7xK_Z6M3jjK2cu_q7PcOjmc-d1Q-Q6x9AJNs6v3hcdqLvISrBtsWIyuBAYvA7QDJ0ueEPBShAu86lArHO-TOcVwkHQ3I2yHeamLF_4no_6vvHQ04i3CeShlTu06cOK-qHRcYPMNu4qYbsxIv3bVPtw7TB6tkExdIfmRH9HTzcInvZ-lq0KDwz2Jbija5b1Nzmjyno-_mzRCyLnI4ki0HF9y8PZgV75EzUNvWFiK4oxsADV9OzvrYJQFw",
   },
 ];

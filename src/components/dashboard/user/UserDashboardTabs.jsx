@@ -5,11 +5,17 @@ import SubscriptionTiers from "./SubscriptionTiers";
 import PortfolioGallery from "./PortfolioGallery";
 import ProfileSettings from "../ProfileSettings";
 import { userPurchases } from "@/data/userPurchases";
-import { boughtArtworks } from "@/data/boughtArtworks";
 
 export default function UserDashboardTabs() {
   const searchParams = useSearchParams();
   const tab = searchParams.get("tab") || "history"; // default: history
+
+  const boughtArtworks = userPurchases.map((p) => ({
+    id: p.id,
+    title: p.artwork,
+    date: p.date,
+    image: p.image,
+  }));
 
   return (
     <div className="max-w-4xl mx-auto space-y-xl">

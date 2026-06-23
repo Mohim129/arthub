@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button, Input, TextArea } from "@heroui/react";
 import { CloudArrowUpIn, Xmark } from "@gravity-ui/icons";
+import { toast } from "react-hot-toast";
 
 export default function ArtworkForm({ artworkToEdit = null, onSubmit = null, onCancel = null }) {
   const [isDragOver, setIsDragOver] = useState(false);
@@ -55,6 +56,10 @@ export default function ArtworkForm({ artworkToEdit = null, onSubmit = null, onC
     e.preventDefault();
     if (!title.trim()) return;
     if (!price) return;
+    if (Number(price) < 0) {
+      toast.error("Price cannot be negative.");
+      return;
+    }
     
     const formattedPrice = `${price} ETH`;
     const finalImage = image || "https://lh3.googleusercontent.com/aida-public/AB6AXuDPV8TBYXeu-NjQo0APLgZU2ccmQp790RoUQsk4Xxdhd6TZrZEDuDHJYzSGiAZTsLp5UWVGrMYLaqrCUp6z3_UOJMa2YwSctquDtexyXg8chnnH9Z9qxNIY7MAIIw5tOY1guLACs92obht02Y5OuyP2_HcdCff5xtluFmoR7tPYce0D8qqkQtI3yhl9FxYCGp0VWciBcY896vok8oZAllL4cIikw9IjGcbmCGHV5u41B9VEjGFM0duKO8vocyd7Vfs-mJ8vun03z3Qa"; // fallback mock image
@@ -100,7 +105,7 @@ export default function ArtworkForm({ artworkToEdit = null, onSubmit = null, onC
       <form onSubmit={handleSubmit} className="space-y-md bg-surface-container-lowest p-md md:p-lg rounded-xl shadow-sm border border-outline-variant/20">
         
         {/* Image Preview & Upload Zone */}
-        {image ? (
+        {/* {image ? (
           <div className="relative rounded-xl overflow-hidden border border-outline-variant/40 bg-surface-container-low max-h-[300px] flex items-center justify-center group">
             <img src={image} alt="Artwork Upload" className="max-h-[300px] object-contain w-full" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-md">
@@ -161,7 +166,7 @@ export default function ArtworkForm({ artworkToEdit = null, onSubmit = null, onC
               </div>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Form Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
@@ -208,20 +213,26 @@ export default function ArtworkForm({ artworkToEdit = null, onSubmit = null, onC
           </div>
           <div className="flex flex-col gap-xs">
             <label className="text-label-caps font-label-caps text-on-surface-variant">
-              PRICE (ETH)
+              PRICE (USD)
             </label>
             <div className="relative">
               <Input
                 placeholder="0.00"
-                step="0.01"
+                step="1"
                 type="number"
+                min="0"
                 value={price}
-                onChange={(e) => setPrice(e.target.value)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || Number(val) >= 0) {
+                    setPrice(val);
+                  }
+                }}
                 className="w-full rounded-lg border-outline-variant bg-surface-container-low pl-md"
                 required
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
-                Ξ
+                $
               </span>
             </div>
           </div>
