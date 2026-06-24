@@ -6,7 +6,7 @@ import { File } from '@gravity-ui/icons';
 import ArtworkForm from './ArtworkForm';
 import ArtworkTable from './ArtworkTable';
 import ProfileSettings from '../ProfileSettings';
-import { getArtistArtworks } from '@/lib/api/artworks';
+import { getArtistArtworks, deleteArtwork } from '@/lib/api/artworks';
 import { authClient } from '@/lib/auth-client';      // adjust path
 import { salesHistory as initialSalesHistory } from '@/data/salesHistory';   // mock sales data
 
@@ -72,10 +72,7 @@ export default function ArtistDashboardTabs() {
         if (!confirm(`Are you sure you want to delete "${itemToDelete?.title || 'this artwork'}"?`)) return;
 
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/artworks/${id}`, {
-                method: 'DELETE',
-            });
-            if (!res.ok) throw new Error('Delete failed');
+            await deleteArtwork(id);
             setArtworks(prev => prev.filter(art => art.id !== id));
             toast.success(`Deleted "${itemToDelete?.title || 'artwork'}"!`);
         } catch (err) {

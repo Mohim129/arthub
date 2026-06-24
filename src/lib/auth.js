@@ -17,7 +17,6 @@ export const auth = betterAuth({
     },
   },
   database: mongodbAdapter(db, {
-    // Optional: if you don't provide a client, database transactions won't be enabled.
     client,
   }),
   databaseHooks: {
@@ -30,6 +29,8 @@ export const auth = betterAuth({
             data: {
               ...user,
               role,
+              bio: oAuthState?.bio || "",
+              image: oAuthState?.image || "",
             },
           };
         },
@@ -40,6 +41,12 @@ export const auth = betterAuth({
     additionalFields: {
       role: {
         default: "user",
+      },
+      bio: {
+        default: "",
+      },
+      image: {
+        default: "",
       },
     },
   },

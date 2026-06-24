@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Layers, Plus, File, Person } from "@gravity-ui/icons";
 
@@ -91,6 +92,11 @@ export default function Sidebar({
   onLinkClick,
 }) {
   const links = navigation[role] || [];
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <aside className="flex flex-col h-full bg-surface-container-low border-r border-outline-variant/30 p-md w-full overflow-y-auto">
@@ -117,7 +123,7 @@ export default function Sidebar({
         ))}
       </div>
 
-      {userName && (
+      {mounted && userName && (
         <div className="mt-auto p-sm bg-surface-container-highest rounded-xl">
           <div className="flex items-center gap-sm">
             <div className="w-10 h-10 rounded-full bg-secondary-container overflow-hidden">

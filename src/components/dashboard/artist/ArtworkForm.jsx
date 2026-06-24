@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Button, Input, TextArea } from "@heroui/react";
 import { addArtwork } from "@/lib/actions/artworks";
+import { updateArtwork } from "@/lib/api/artworks";
 import toast from "react-hot-toast";
 
 export default function ArtworkForm({
@@ -41,15 +42,28 @@ export default function ArtworkForm({
     };
 
     try {
-      const res = await addArtwork(artworkData);
-      if (onSubmit) {
-        onSubmit({
-          ...artworkData,
-          id: res.id,
-          status: artworkToEdit?.status || "active",
-          artistId: res.artistId,
-          createdAt: new Date().toISOString(),
-        });
+      if (artworkToEdit) {
+        await updateArtwork(artworkToEdit.id, artworkData);
+        if (onSubmit) {
+          onSubmit({
+            ...artworkData,
+            id: artworkToEdit.id,
+            status: artworkToEdit.status || "active",
+            artistId: artworkToEdit.artistId,
+            createdAt: artworkToEdit.createdAt || new Date().toISOString(),
+          });
+        }
+      } else {
+        const res = await addArtwork(artworkData);
+        if (onSubmit) {
+          onSubmit({
+            ...artworkData,
+            id: res.id,
+            status: "active",
+            artistId: res.artistId,
+            createdAt: new Date().toISOString(),
+          });
+        }
       }
 
       // Reset form if not editing
