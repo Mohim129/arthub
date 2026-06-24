@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun, Person, Bars, Xmark } from "@gravity-ui/icons";
 import { authClient, useSession } from "@/lib/auth-client"; // adjust path
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 const emptySubscribe = () => () => {};
 
@@ -48,7 +48,6 @@ export default function Navbar() {
 
   return (
     <header className="fixed top-0 w-full z-50 bg-surface/90 dark:bg-inverse-surface/90 backdrop-blur-md shadow-sm transition-shadow duration-300">
-      <Toaster position="top-right" toastOptions={{ className: "text-sm" }} />
       <div className="w-full max-w-container-max mx-auto px-gutter flex justify-between items-center h-20 relative">
         {/* Logo */}
         <Link

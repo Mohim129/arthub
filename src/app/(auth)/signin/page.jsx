@@ -38,6 +38,25 @@ export default function SignIn() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+
+    try {
+      const { data, error } = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: "/",
+      });
+
+      if (error) {
+        toast.error(error.message || "Google sign in failed.");
+        setLoading(false);
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred.");
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center py-10 md:py-20 px-gutter bg-background">
       <Toaster position="top-right" toastOptions={{ className: "text-sm" }} />
@@ -119,13 +138,11 @@ export default function SignIn() {
           <hr className="flex-1 border-outline-variant" />
         </div>
 
-        {/* Google OAuth placeholder */}
+        {/* Google OAuth */}
         <Button
           variant="bordered"
           className="w-full border-outline-variant text-on-surface font-semibold hover:bg-surface-container-low transition-colors"
-          onPress={() => {
-            /* later: Better Auth Google OAuth */
-          }}
+          onPress={handleGoogleSignIn}
         >
           <svg className="w-5 h-5 mr-sm" viewBox="0 0 24 24">
             <path
