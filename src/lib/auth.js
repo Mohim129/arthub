@@ -24,13 +24,16 @@ export const auth = betterAuth({
       create: {
         before: async (user) => {
           const oAuthState = await getOAuthState();
-          const role = oAuthState?.role || "user";
+          const role = oAuthState?.role || user.role || "user";
+          // Keep the user-supplied image if present, otherwise fall back to oAuthState, then empty string
+          const image = user.image || oAuthState?.image || "";
+          const bio = user.bio || oAuthState?.bio || "";
           return {
             data: {
               ...user,
               role,
-              bio: oAuthState?.bio || "",
-              image: oAuthState?.image || "",
+              bio,
+              image,
             },
           };
         },

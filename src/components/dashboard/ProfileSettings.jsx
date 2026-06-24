@@ -5,6 +5,29 @@ import { toast } from "react-hot-toast";
 import { Person, Camera } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client";
 
+// ---------- imgBB upload helper ----------
+async function uploadToImgBB(file) {
+  const apiKey = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_API;
+  if (!apiKey) throw new Error("Image upload API key is missing.");
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Image upload failed.");
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || "Upload failed.");
+
+  return json.data.url; // the direct image URL
+}
+
+// -----------------------------------------
+
 export default function ProfileSettings() {
   const { data: session, isPending: sessionLoading } = authClient.useSession();
   const user = session?.user;
@@ -13,8 +36,8 @@ export default function ProfileSettings() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState(null); // File object
-  const [avatarPreview, setAvatarPreview] = useState(""); // data URL for preview
+  const [avatar, setAvatar] = useState(null); // File object (new upload)
+  const [avatarPreview, setAvatarPreview] = useState(""); // data URL or existing URL
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -38,7 +61,7 @@ export default function ProfileSettings() {
     }
   }, [user]);
 
-  // Handle image file selection
+  // Handle image file selection – preview only
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -68,17 +91,21 @@ export default function ProfileSettings() {
 
     setProfileSaving(true);
     try {
+      let imageUrl = user.image; // keep existing if no new file
+
+      if (avatar) {
+        // Upload new image to imgBB
+        toast.loading("Uploading image…", { id: "upload" });
+        imageUrl = await uploadToImgBB(avatar);
+        toast.success("Image uploaded!", { id: "upload" });
+      }
+
       // Build update payload – email is NOT included
       const updateData = {
         name: name.trim(),
         bio: bio.trim(),
+        image: imageUrl || "", // imgBB URL or existing
       };
-
-      // For now, if a new avatar file is selected, send the data URL.
-      // Later, you'll upload to imgBB and send the returned URL instead.
-      if (avatar && avatarPreview) {
-        updateData.image = avatarPreview; // base64 data URL (temporary)
-      }
 
       await authClient.updateUser(updateData);
       toast.success("Profile updated!");

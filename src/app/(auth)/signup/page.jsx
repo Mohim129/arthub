@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { Button } from "@heroui/react";
 import {
@@ -10,19 +10,66 @@ import {
   Eye,
   EyeSlash,
 } from "@gravity-ui/icons";
-import { authClient } from "@/lib/auth-client"; // adjust path if needed
+import { authClient } from "@/lib/auth-client";
 import toast, { Toaster } from "react-hot-toast";
+
+/* ---------- imgBB upload helper ---------- */
+async function uploadToImgBB(file) {
+  const apiKey = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_API;
+  if (!apiKey) throw new Error("Image upload API key is missing.");
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Image upload failed.");
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || "Upload failed.");
+
+  return json.data.url; // the direct image URL
+}
+/* ------------------------------------------ */
 
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Image upload state
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // Image selection handler
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be smaller than 5 MB.");
+      return;
+    }
+
+    setAvatarFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setAvatarPreview(reader.result);
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,6 +86,17 @@ export default function SignUp() {
 
     setLoading(true);
     try {
+      let imageUrl = "";
+
+      // If a file was selected, upload it first
+      if (avatarFile) {
+        setUploading(true);
+        toast.loading("Uploading profile picture…", { id: "upload" });
+        imageUrl = await uploadToImgBB(avatarFile);
+        toast.success("Profile picture uploaded!", { id: "upload" });
+        setUploading(false);
+      }
+
       const { data, error: signUpError } = await authClient.signUp.email({
         email,
         password,
@@ -65,16 +123,12 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     setLoading(true);
-
     try {
       const { data, error } = await authClient.signIn.social({
         provider: "google",
         callbackURL: "/",
-        additionalData: {
-          role,
-        },
+        additionalData: { role },
       });
-
       if (error) {
         toast.error(error.message || "Google sign up failed.");
         setLoading(false);
@@ -137,22 +191,51 @@ export default function SignUp() {
             </div>
           </div>
 
-          {/* Profile Image URL – optional */}
+          {/* Profile Picture Upload (optional) */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
-              Profile Image URL{" "}
+              Profile Picture{" "}
               <span className="font-normal normal-case tracking-normal text-outline">
                 (optional)
               </span>
             </label>
-            <div className="relative">
-              <Camera className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
+
+            <div className="flex items-center gap-4">
+              {/* Preview or placeholder */}
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-20 h-20 rounded-xl bg-surface-container-lowest border border-outline-variant/30 flex items-center justify-center overflow-hidden cursor-pointer hover:border-primary/50 transition-colors shrink-0"
+              >
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <Camera className="w-6 h-6 text-outline" />
+                )}
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-primary font-semibold text-sm hover:underline self-start"
+                >
+                  Upload image
+                </button>
+                <p className="text-[11px] text-outline">
+                  JPG, PNG or GIF (Max 5 MB)
+                </p>
+              </div>
+
               <input
-                type="url"
-                placeholder="https://example.com/avatar.jpg"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                type="file"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="hidden"
               />
             </div>
           </div>
@@ -252,9 +335,13 @@ export default function SignUp() {
             type="submit"
             color="primary"
             className="w-full font-bold mt-4"
-            isLoading={loading}
+            isLoading={loading || uploading}
           >
-            {loading ? "Creating account..." : "Sign Up"}
+            {uploading
+              ? "Uploading image..."
+              : loading
+                ? "Creating account..."
+                : "Sign Up"}
           </Button>
         </form>
 
