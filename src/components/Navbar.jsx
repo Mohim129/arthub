@@ -1,6 +1,7 @@
 "use client";
 import { useState, useSyncExternalStore } from "react";
 import { Button } from "@heroui/react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -22,12 +23,20 @@ export default function Navbar() {
     () => false,
   );
   const { setTheme, resolvedTheme } = useTheme();
-  const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const [menuOpen, setMenuOpen] = useState(false);
   const { data: session, isPending } = useSession();
 
-  const isActive = (href) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href);
+  const isActive = (href) => pathname === href;
+
+  const linkClass =
+    "font-body-large text-body-large pb-1 transition-colors text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-b-2 border-transparent";
+
+  const mobileLinkClass =
+    "py-3 px-4 rounded-lg transition-all duration-200 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low hover:text-primary dark:hover:text-primary-fixed-dim";
+
+  const mobileActiveLinkClass =
+    "py-3 px-4 rounded-lg transition-all duration-200 text-primary dark:text-primary-fixed-dim font-semibold bg-primary-container/10";
 
   const handleLogout = async () => {
     try {
@@ -63,11 +72,7 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className={`font-body-large text-body-large pb-1 transition-colors ${
-                isActive(href)
-                  ? "text-primary dark:text-primary-fixed-dim border-b-2 border-primary dark:border-primary-fixed-dim"
-                  : "text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-b-2 border-transparent"
-              }`}
+              className="font-body-large text-body-large pb-1 transition-colors text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-b-2 border-transparent"
             >
               {label}
             </Link>
@@ -100,9 +105,11 @@ export default function Navbar() {
                     className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-outline-variant/10 text-on-surface dark:text-inverse-on-surface transition-colors overflow-hidden"
                   >
                     {session.user?.image ? (
-                      <img
+                      <Image
                         src={session.user.image}
                         alt={session.user.name || "User"}
+                        width={32}
+                        height={32}
                         className="w-8 h-8 rounded-full object-cover"
                       />
                     ) : (

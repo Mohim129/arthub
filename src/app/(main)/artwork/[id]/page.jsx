@@ -9,15 +9,12 @@ import {
   ShoppingBag,
   ShieldCheck,
   Pencil,
-  Xmark,
   Magnifier,
+  Trash,
 } from "@gravity-ui/icons";
-import { comments as initialComments } from "@/data/comments";
 import Lightbox from "@/components/Lightbox";
-import CommentForm from "@/components/CommentForm";
-import CommentList from "@/components/CommentList";
 import { getArtwork } from "@/lib/api/artworks";
-import { getUserById } from "@/lib/api/users";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
@@ -29,26 +26,28 @@ export default function ArtworkDetailPage() {
   const [artwork, setArtwork] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [comments, setComments] = useState(initialComments);
   const [lightboxSrc, setLightboxSrc] = useState(null);
 
-  // Fetch artwork data
+  // Comments state
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState("");
+
+  // Purchase check
+  const [hasPurchased, setHasPurchased] = useState(false);
+  const [purchasesLoading, setPurchasesLoading] = useState(true);
+
+  const userId = session?.user?.id;
+  const isOwner = userId && artwork ? userId === artwork.artistId : false;
+
+  // 1. Fetch artwork
   useEffect(() => {
     async function fetchArtwork() {
       try {
         setLoading(true);
         const data = await getArtwork(params.id);
-
-        if (data?.artistId) {
-          try {
-            const artist = await getUserById(data.artistId);
-            data.artistName = artist.name || data.artistName;
-            data.artistAvatar = artist.image || data.artistAvatar;
-          } catch (artistError) {
-            console.warn("Failed to load artist info:", artistError);
-          }
-        }
-
         setArtwork(data);
       } catch (err) {
         setError(err.message || "Failed to load artwork.");
@@ -59,6 +58,95 @@ export default function ArtworkDetailPage() {
     if (params.id) fetchArtwork();
   }, [params.id]);
 
+  // 2. Fetch comments
+  useEffect(() => {
+    async function fetchComments() {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/artworks/${params.id}/comments`,
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setComments(data);
+        }
+      } catch (e) {
+        // silently fail
+      }
+    }
+    if (params.id) fetchComments();
+  }, [params.id]);
+
+  // 3. Check if user purchased this artwork
+  useEffect(() => {
+    if (!userId || !params.id) {
+      setPurchasesLoading(false);
+      return;
+    }
+    async function checkPurchase() {
+      try {
+        const purchases = await fetchWithAuth(`/api/users/${userId}/purchases`);
+        const bought = purchases.some((p) => p.artworkId === params.id);
+        setHasPurchased(bought);
+      } catch (e) {
+        setHasPurchased(false);
+      } finally {
+        setPurchasesLoading(false);
+      }
+    }
+    checkPurchase();
+  }, [userId, params.id]);
+
+  // Post comment
+  const handlePostComment = async () => {
+    if (!newComment.trim()) return;
+    setCommentSubmitting(true);
+    try {
+      const res = await fetchWithAuth(`/api/artworks/${params.id}/comments`, {
+        method: "POST",
+        body: JSON.stringify({ text: newComment.trim() }),
+      });
+      setComments((prev) => [res, ...prev]);
+      setNewComment("");
+      toast.success("Comment posted!");
+    } catch (err) {
+      toast.error(err.message || "Failed to post comment.");
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  // Edit comment
+  const handleEditComment = async (commentId) => {
+    if (!editText.trim()) return;
+    try {
+      const updated = await fetchWithAuth(`/api/comments/${commentId}`, {
+        method: "PUT",
+        body: JSON.stringify({ text: editText.trim() }),
+      });
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId ? { ...c, text: updated.text } : c,
+        ),
+      );
+      setEditingCommentId(null);
+      toast.success("Comment updated!");
+    } catch (err) {
+      toast.error(err.message || "Failed to update comment.");
+    }
+  };
+
+  // Delete comment
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm("Delete this comment?")) return;
+    try {
+      await fetchWithAuth(`/api/comments/${commentId}`, { method: "DELETE" });
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      toast.success("Comment deleted.");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete comment.");
+    }
+  };
+
   const handleMouseMove = useCallback((e) => {
     const img = e.currentTarget.querySelector("img");
     if (!img) return;
@@ -68,45 +156,6 @@ export default function ArtworkDetailPage() {
     const y = ((e.pageY - top) / height) * 100;
     img.style.transformOrigin = `${x}% ${y}%`;
   }, []);
-
-  const handlePostComment = (text) => {
-    setComments((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        user: "You",
-        avatar: "",
-        date: "Just now",
-        isOwner: false,
-        text,
-      },
-    ]);
-  };
-
-  const handlePurchase = () => {
-    toast.loading("Redirecting to Stripe Checkout...", { id: "checkout" });
-    // Simulate successful payment redirect and update
-    setTimeout(() => {
-      toast.success("Payment successful! Purchase history updated.", { id: "checkout" });
-    }, 2000);
-  };
-
-  const handleDelete = async () => {
-    if (!confirm("Are you sure you want to delete this artwork?")) return;
-    try {
-      const { deleteArtwork } = await import("@/lib/api/artworks");
-      await deleteArtwork(artwork.id);
-      toast.success("Artwork deleted.");
-      router.push("/dashboard/artist?tab=manage");
-    } catch (err) {
-      toast.error(err.message || "Failed to delete artwork.");
-    }
-  };
-
-  // Determine ownership and purchase eligibility
-  const userId = session?.user?.id;
-  const isOwner = userId && artwork ? userId === artwork.artistId : false;
-  const canPurchase = userId && artwork ? userId !== artwork.artistId : false;
 
   if (loading) {
     return (
@@ -131,9 +180,7 @@ export default function ArtworkDetailPage() {
     );
   }
 
-  if (!artwork) {
-    return null; // Should be covered by loading/error, but just in case
-  }
+  if (!artwork) return null;
 
   return (
     <>
@@ -149,7 +196,7 @@ export default function ArtworkDetailPage() {
               <img
                 className="w-full h-full object-cover transition-transform duration-700 ease-out"
                 alt={artwork.title}
-                src={artwork.image || null}
+                src={artwork.image}
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-md">
                 <span className="text-white text-body-small flex items-center gap-xs">
@@ -158,7 +205,6 @@ export default function ArtworkDetailPage() {
                 </span>
               </div>
             </div>
-            {/* Action Tools */}
             <div className="absolute top-md right-md flex flex-col gap-sm">
               <button className="w-10 h-10 rounded-full bg-surface/90 backdrop-blur-sm shadow-md flex items-center justify-center text-on-surface hover:text-primary transition-colors">
                 <Heart />
@@ -189,7 +235,7 @@ export default function ArtworkDetailPage() {
                     <img
                       className="w-full h-full object-cover"
                       alt={artwork.artistName}
-                      src={artwork.artistAvatar || null}
+                      src={artwork.artistAvatar}
                     />
                   ) : (
                     <Heart className="w-5 h-5 text-on-surface-variant" />
@@ -198,10 +244,10 @@ export default function ArtworkDetailPage() {
                 <p className="font-body-large text-body-large">
                   by{" "}
                   <Link
-                    href={`/artist/${artwork.artistId}`}
+                    href={`/browse?artist=${encodeURIComponent(artwork.artistName)}`}
                     className="text-primary font-semibold hover:underline"
                   >
-                    {artwork.artistName || "Unknown Artist"}
+                    {artwork.artistName}
                   </Link>
                 </p>
               </div>
@@ -220,21 +266,13 @@ export default function ArtworkDetailPage() {
                     : artwork.price}
                 </span>
               </div>
-              <p className="text-on-surface-variant text-body-small">
-                Approximately $
-                {typeof artwork.price === "number"
-                  ? artwork.price.toLocaleString()
-                  : artwork.price}{" "}
-                USD
-              </p>
               {userId ? (
                 <Button
-                  disabled={!canPurchase}
-                  onClick={handlePurchase}
+                  disabled={isOwner}
                   className={`w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] ${
-                    canPurchase
-                      ? "bg-primary text-on-primary hover:opacity-90"
-                      : "bg-surface-variant text-on-surface-variant cursor-not-allowed"
+                    isOwner
+                      ? "bg-surface-variant text-on-surface-variant cursor-not-allowed"
+                      : "bg-primary text-on-primary hover:opacity-90"
                   }`}
                 >
                   <ShoppingBag />
@@ -257,7 +295,7 @@ export default function ArtworkDetailPage() {
               </div>
             </div>
 
-            {/* Artist Controls (only if owner) */}
+            {/* Artist Controls */}
             {isOwner && (
               <div className="flex items-center gap-sm border-l-4 border-primary px-md py-sm bg-surface-container-highest/30 rounded-r-lg">
                 <Pencil className="text-primary" />
@@ -269,20 +307,12 @@ export default function ArtworkDetailPage() {
                     You own this artwork.
                   </p>
                 </div>
-                <div className="flex gap-sm">
-                  <Link
-                    href={`/dashboard/artist?tab=manage`}
-                    className="px-sm py-xs border border-outline rounded-lg text-body-small font-semibold hover:bg-surface-variant transition-colors"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={handleDelete}
-                    className="px-sm py-xs border border-error rounded-lg text-error text-body-small font-semibold hover:bg-error-container transition-colors"
-                  >
-                    Delete
-                  </button>
-                </div>
+                <Link
+                  href={`/dashboard/artist?tab=manage`}
+                  className="px-sm py-xs border border-outline rounded-lg text-body-small font-semibold hover:bg-surface-variant transition-colors"
+                >
+                  Edit
+                </Link>
               </div>
             )}
 
@@ -296,7 +326,7 @@ export default function ArtworkDetailPage() {
               </p>
             </div>
 
-            {/* Comments Section (mock for now) */}
+            {/* Comments Section */}
             <div className="flex flex-col gap-md mt-sm">
               <div className="flex items-center justify-between">
                 <h3 className="font-h3 text-h3">Collector Community</h3>
@@ -305,20 +335,121 @@ export default function ArtworkDetailPage() {
                 </span>
               </div>
 
-              {userId ? (
-                <CommentForm onSubmit={handlePostComment} />
-              ) : (
+              {/* Comment form – only if purchased */}
+              {userId && hasPurchased && (
+                <div className="flex gap-sm p-sm bg-surface-container-low rounded-xl">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    rows={3}
+                    className="flex-1 bg-surface border-surface-variant rounded-lg p-sm text-body-large focus:ring-2 focus:ring-primary resize-none"
+                  />
+                  <Button
+                    onPress={handlePostComment}
+                    isLoading={commentSubmitting}
+                    className="bg-primary text-on-primary px-md py-xs rounded-lg font-semibold self-end"
+                  >
+                    Post
+                  </Button>
+                </div>
+              )}
+              {userId && !hasPurchased && !purchasesLoading && (
                 <p className="text-on-surface-variant text-body-small italic">
-                  Sign in to leave a comment.
+                  Purchase this artwork to leave a comment.
+                </p>
+              )}
+              {!userId && (
+                <p className="text-on-surface-variant text-body-small italic">
+                  <Link href="/signin" className="text-primary hover:underline">
+                    Sign in
+                  </Link>{" "}
+                  to leave a comment.
                 </p>
               )}
 
-              <CommentList comments={comments} />
+              {/* Comments list */}
+              <div className="flex flex-col gap-sm max-h-[400px] overflow-y-auto pr-sm custom-scrollbar">
+                {comments.map((comment) => (
+                  <div
+                    key={comment.id}
+                    className="flex gap-md p-md bg-white border border-surface-container rounded-xl shadow-sm"
+                  >
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container shrink-0">
+                      {comment.userAvatar ? (
+                        <img
+                          src={comment.userAvatar}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-on-surface-variant">
+                          ?
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-xs flex-1">
+                      <div className="flex items-center gap-sm">
+                        <span className="font-bold text-on-background">
+                          {comment.userName || "Anonymous"}
+                        </span>
+                        <span className="text-outline text-body-small">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                      {editingCommentId === comment.id ? (
+                        <div className="flex gap-sm">
+                          <input
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="flex-1 border border-outline-variant rounded px-2 py-1 text-sm"
+                          />
+                          <button
+                            onClick={() => handleEditComment(comment.id)}
+                            className="text-primary font-semibold text-sm"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingCommentId(null)}
+                            className="text-error text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-on-surface-variant text-body-large">
+                          {comment.text}
+                        </p>
+                      )}
+                      {userId === comment.userId &&
+                        editingCommentId !== comment.id && (
+                          <div className="flex gap-sm mt-1">
+                            <button
+                              onClick={() => {
+                                setEditingCommentId(comment.id);
+                                setEditText(comment.text);
+                              }}
+                              className="text-primary text-body-small font-semibold hover:underline"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteComment(comment.id)}
+                              className="text-error text-body-small font-semibold hover:underline"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
-
       <Lightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
     </>
   );

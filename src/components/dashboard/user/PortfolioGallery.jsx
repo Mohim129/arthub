@@ -1,6 +1,28 @@
 import Link from "next/link";
 
-export default function PortfolioGallery({ artworks }) {
+export default function PortfolioGallery({ artworks, loading }) {
+  if (loading) {
+    return (
+      <section className="flex flex-col gap-md">
+        <h2 className="font-h2 text-h2 text-on-surface">Portfolio Spotlight</h2>
+        <div className="text-center py-12 text-on-surface-variant">
+          Loading your portfolio...
+        </div>
+      </section>
+    );
+  }
+
+  if (artworks.length === 0) {
+    return (
+      <section className="flex flex-col gap-md">
+        <h2 className="font-h2 text-h2 text-on-surface">Portfolio Spotlight</h2>
+        <div className="text-center py-12 text-on-surface-variant">
+          No artworks in your portfolio yet. Start collecting!
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="flex flex-col gap-md">
       <h2 className="font-h2 text-h2 text-on-surface">Portfolio Spotlight</h2>
@@ -18,13 +40,13 @@ export default function PortfolioGallery({ artworks }) {
             <div className="absolute inset-0 bg-linear-to-t from-inverse-surface/80 via-transparent to-transparent" />
             <div className="absolute bottom-0 left-0 p-lg">
               <span className="bg-primary px-sm py-xs rounded-full font-label-caps text-label-caps text-on-primary mb-sm inline-block">
-                MOST VALUABLE
+                MOST RECENT
               </span>
               <p className="font-h1-desktop text-h1-desktop font-bold text-white">
                 {artworks[0].title}
               </p>
               <p className="font-body-large text-body-large text-surface-bright">
-                Acquired: {artworks[0].date}
+                Acquired: {artworks[0].date ? new Date(artworks[0].date).toLocaleDateString() : "N/A"}
               </p>
             </div>
           </Link>
@@ -52,7 +74,7 @@ export default function PortfolioGallery({ artworks }) {
               </p>
               {art.date && (
                 <p className="font-body-small text-surface-bright">
-                  Acquired: {art.date}
+                  Acquired: {new Date(art.date).toLocaleDateString()}
                 </p>
               )}
             </div>

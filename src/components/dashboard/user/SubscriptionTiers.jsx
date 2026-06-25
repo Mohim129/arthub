@@ -1,24 +1,66 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@heroui/react";
 import { Check, Xmark } from "@gravity-ui/icons";
 import { toast } from "react-hot-toast";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 
 export default function SubscriptionTiers() {
-  const [currentTier, setCurrentTier] = useState("Free");
+  const router = useRouter();
+  const { data: session } = authClient.useSession();
+  const [currentTier, setCurrentTier] = useState("free");
 
-  const handleUpgrade = (tierName) => {
-    if (tierName === currentTier) {
+  // Set current tier from session
+  useEffect(() => {
+    const tier = session?.user?.tier || session?.user?.subscriptionTier;
+    if (tier) {
+      setCurrentTier(tier.toLowerCase());
+    }
+  }, [session?.user?.tier, session?.user?.subscriptionTier]);
+
+  const handleUpgrade = async (tierName) => {
+    const tierKey = tierName.toLowerCase();
+    if (tierKey === currentTier) {
       toast.error(`You are already subscribed to the ${tierName} plan.`);
       return;
     }
-    setCurrentTier(tierName);
-    toast.success(`Successfully switched to the ${tierName} plan!`);
+
+    if (tierKey === "free") {
+      setCurrentTier("free");
+      toast.success("Downgraded to Free plan!");
+      return;
+    }
+
+    try {
+      toast.loading("Redirecting to Stripe Checkout...", { id: "subscription" });
+      
+      const response = await fetch("/api/stripe/subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: tierKey })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast.error(data.error || "Failed to create subscription session", { id: "subscription" });
+        return;
+      }
+
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      toast.error(err.message || "Subscription error", { id: "subscription" });
+    }
   };
 
   const tiers = [
     {
       name: "Free",
+      key: "free",
       price: "$0",
       description: "Default plan for new collectors. Access basic browsing.",
       maxPurchases: "3 paintings allowed",
@@ -29,12 +71,13 @@ export default function SubscriptionTiers() {
         "Public Curation Board",
       ],
       missing: ["High-Res VR View", "Artist Direct Messaging", "1-on-1 Art Concierge"],
-      buttonText: currentTier === "Free" ? "Current Plan" : "Downgrade to Free",
-      isCurrent: currentTier === "Free",
+      buttonText: currentTier === "free" ? "Current Plan" : "Downgrade to Free",
+      isCurrent: currentTier === "free",
       highlighted: false,
     },
     {
       name: "Pro",
+      key: "pro",
       price: "$9.99",
       period: "/mo",
       description: "For active collectors looking for expanded features and curation.",
@@ -47,12 +90,13 @@ export default function SubscriptionTiers() {
         "Early Access Drops",
       ],
       missing: ["1-on-1 Art Concierge", "Free Global Shipping"],
-      buttonText: currentTier === "Pro" ? "Current Plan" : "Upgrade to Pro",
-      isCurrent: currentTier === "Pro",
+      buttonText: currentTier === "pro" ? "Current Plan" : "Upgrade to Pro",
+      isCurrent: currentTier === "pro",
       highlighted: true,
     },
     {
       name: "Premium",
+      key: "premium",
       price: "$19.99",
       period: "/mo",
       description: "Full unlimited access with white-glove concierge services.",
@@ -65,8 +109,8 @@ export default function SubscriptionTiers() {
         "Private Auctions Access",
       ],
       missing: [],
-      buttonText: currentTier === "Premium" ? "Current Plan" : "Upgrade to Premium",
-      isCurrent: currentTier === "Premium",
+      buttonText: currentTier === "premium" ? "Current Plan" : "Upgrade to Premium",
+      isCurrent: currentTier === "premium",
       highlighted: false,
     },
   ];

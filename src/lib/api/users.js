@@ -13,3 +13,18 @@ export const getUserById = async (id) => {
   }
   return res.json();
 };
+
+export const getUserPurchases = async (id) => {
+  const res = await fetch(`${getBaseUrl()}/api/users/${id}/purchases`, {
+    credentials: "same-origin",
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Unauthorized");
+    }
+    throw new Error("Failed to fetch purchases");
+  }
+  const data = await res.json();
+  return Array.isArray(data) ? data : data.purchases || [];
+};

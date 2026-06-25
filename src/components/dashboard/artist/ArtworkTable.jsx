@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import {
   Pencil,
   TrashBin,
@@ -325,7 +326,10 @@ export default function ArtworkTable({ onEdit, onDelete }) {
                   className="hover:bg-surface-container/30 transition-colors"
                 >
                   <td className="p-md">
-                    <div className="flex items-center gap-md">
+                    <Link
+                      href={`/artwork/${artwork.id}`}
+                      className="flex items-center gap-md hover:opacity-80 transition-opacity cursor-pointer"
+                    >
                       <div className="w-12 h-12 rounded bg-surface-variant overflow-hidden shrink-0 flex items-center justify-center">
                         {artwork.image ? (
                           <img
@@ -337,8 +341,10 @@ export default function ArtworkTable({ onEdit, onDelete }) {
                           <Picture className="w-6 h-6 text-on-surface-variant" />
                         )}
                       </div>
-                      <span className="font-bold">{artwork.title}</span>
-                    </div>
+                      <span className="font-bold text-on-surface hover:text-primary transition-colors">
+                        {artwork.title}
+                      </span>
+                    </Link>
                   </td>
 
                   <td className="p-md">

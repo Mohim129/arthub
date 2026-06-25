@@ -9,20 +9,95 @@ import AnalyticsCharts from "./AnalyticsCharts";
 import UserManagementTable from "./UserManagementTable";
 import AdminArtworkTable from "./AdminArtworkTable";
 import AdminTransactionTable from "./AdminTransactionTable";
-import { adminStats } from "@/data/adminStats";
-import { adminTransactions } from "@/data/adminTransactions";
+import { fetchAPI } from "@/lib/fetchWithAuth";
+import { authClient } from "@/lib/auth-client";
 
 export default function AdminDashboardTabs() {
   const searchParams = useSearchParams();
-  const tab = searchParams.get("tab") || "users"; // Make "users" the default tab for better admin utility
+  const tab = searchParams.get("tab") || "users";
+  const { data: session } = authClient.useSession();
 
   // Local state management
   const [users, setUsers] = useState([]);
   const [artworks, setArtworks] = useState([]);
-  const [transactions] = useState(adminTransactions); // Keep mock transactions for now
+  const [transactions, setTransactions] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [rawStats, setRawStats] = useState(null);
   
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [loadingArtworks, setLoadingArtworks] = useState(false);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // Fetch stats for analytics tab
+  useEffect(() => {
+    if (tab === "analytics") {
+      const fetchStats = async () => {
+        try {
+          setLoadingStats(true);
+          const response = await fetchAPI("/api/admin/stats", session?.user?.id);
+          if (!response.ok) throw new Error("Failed to fetch stats");
+          const data = await response.json();
+          setRawStats(data);
+
+          // fetch users to compute role-based counts
+          let usersData = users;
+          try {
+            if (!users || users.length === 0) {
+              const usersRes = await fetch('/api/admin/users');
+              if (usersRes.ok) usersData = await usersRes.json();
+            }
+          } catch (e) {
+            // ignore user fetch errors — fallback to backend stats
+          }
+
+          const totalUsersCount = Array.isArray(usersData) ? usersData.length : data.totalUsers;
+          const totalArtistsCount = Array.isArray(usersData)
+            ? usersData.filter(u => {
+                const r = (u.role || u?.roleName || '').toString().toLowerCase();
+                return r.includes('artist');
+              }).length
+            : data.totalArtists;
+          
+          // Transform data to match StatsCard format
+          const transformedStats = [
+            {
+              label: "Total Users",
+              value: totalUsersCount,
+              icon: "users",
+              color: "primary"
+            },
+            {
+              label: "Total Artists",
+              value: totalArtistsCount,
+              icon: "palette",
+              color: "secondary"
+            },
+            {
+              label: "Artworks Sold",
+              value: data.totalSoldArtworks,
+              icon: "shopping",
+              color: "tertiary"
+            },
+            {
+              label: "Total Revenue",
+              value: `$${data.totalRevenue?.toFixed(2) || "0.00"}`,
+              icon: "money",
+              color: "success"
+            }
+          ];
+          
+          setStats(transformedStats);
+        } catch (err) {
+          toast.error(err.message || "Failed to load stats");
+        } finally {
+          setLoadingStats(false);
+        }
+      };
+      
+      fetchStats();
+    }
+  }, [tab, session?.user?.id]);
 
   // Fetch users from DB
   useEffect(() => {
@@ -63,6 +138,27 @@ export default function AdminDashboardTabs() {
         });
     }
   }, [tab]);
+
+  // Fetch transactions from DB
+  useEffect(() => {
+    if (tab === "transactions" || tab === "analytics") {
+      const fetchTransactions = async () => {
+        try {
+          setLoadingTransactions(true);
+          const response = await fetchAPI("/api/admin/transactions", session?.user?.id);
+          if (!response.ok) throw new Error("Failed to fetch transactions");
+          const data = await response.json();
+          setTransactions(data);
+        } catch (err) {
+          toast.error(err.message || "Failed to load transactions");
+        } finally {
+          setLoadingTransactions(false);
+        }
+      };
+      
+      fetchTransactions();
+    }
+  }, [tab, session?.user?.id]);
 
   const handleRoleChange = async (userId, newRole) => {
     try {
@@ -133,11 +229,21 @@ export default function AdminDashboardTabs() {
       {tab === "analytics" && (
         <>
           <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-gutter mb-xl">
-            {adminStats.map((stat, i) => (
-              <StatsCard key={i} stat={stat} />
-            ))}
+            {loadingStats ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-32 bg-surface-container rounded-lg animate-pulse" />
+              ))
+            ) : stats ? (
+              stats.map((stat, i) => (
+                <StatsCard key={i} stat={stat} />
+              ))
+            ) : (
+              <div className="col-span-full text-center text-on-surface-variant">
+                No stats available
+              </div>
+            )}
           </section>
-          <AnalyticsCharts />
+          <AnalyticsCharts transactions={transactions} stats={rawStats} />
         </>
       )}
 
@@ -168,9 +274,15 @@ export default function AdminDashboardTabs() {
       )}
 
       {tab === "transactions" && (
-        <AdminTransactionTable 
-          transactions={transactions} 
-        />
+        loadingTransactions ? (
+          <div className="text-center py-20 font-body-large text-on-surface-variant">
+            Loading transactions from database...
+          </div>
+        ) : (
+          <AdminTransactionTable 
+            transactions={transactions} 
+          />
+        )
       )}
     </div>
   );

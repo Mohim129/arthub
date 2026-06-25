@@ -12,8 +12,10 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId:
+        process.env.GOOGLE_CLIENT_ID,
+      clientSecret:
+        process.env.GOOGLE_CLIENT_SECRET,
     },
   },
   database: mongodbAdapter(db, {
@@ -25,7 +27,6 @@ export const auth = betterAuth({
         before: async (user) => {
           const oAuthState = await getOAuthState();
           const role = oAuthState?.role || user.role || "user";
-          // Keep the user-supplied image if present, otherwise fall back to oAuthState, then empty string
           const image = user.image || oAuthState?.image || "";
           const bio = user.bio || oAuthState?.bio || "";
           return {
@@ -50,6 +51,9 @@ export const auth = betterAuth({
       },
       image: {
         default: "",
+      },
+      tier: {
+        default: "free",
       },
     },
   },

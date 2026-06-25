@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 
-export async function POST(req) {
+export async function GET(req) {
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     
@@ -12,25 +12,14 @@ export async function POST(req) {
       );
     }
 
-    const { artworkId } = await req.json();
-
-    if (!artworkId) {
-      return NextResponse.json(
-        { error: "Artwork ID is required" },
-        { status: 400 }
-      );
-    }
-
     // Forward to backend API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
-    const response = await fetch(`${baseUrl}/api/stripe/create-purchase-session`, {
-      method: "POST",
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const response = await fetch(`${baseUrl}/api/admin/stats`, {
+      method: "GET",
       headers: {
-        "Content-Type": "application/json",
         "Authorization": `Bearer ${session.user.id}`,
         "x-user-id": session.user.id
-      },
-      body: JSON.stringify({ artworkId })
+      }
     });
 
     const data = await response.json();
@@ -41,9 +30,9 @@ export async function POST(req) {
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Checkout session error:", err);
+    console.error("Stats fetch error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to create checkout session" },
+      { error: err.message || "Failed to fetch stats" },
       { status: err.statusCode || 500 }
     );
   }

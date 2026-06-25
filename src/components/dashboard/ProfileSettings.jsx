@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Button, Input, TextArea } from "@heroui/react";
 import { toast } from "react-hot-toast";
-import { Person, Camera } from "@gravity-ui/icons";
+import { Person, Camera, Lock, Eye, EyeSlash } from "@gravity-ui/icons";
 import { authClient } from "@/lib/auth-client";
 
 // ---------- imgBB upload helper ----------
@@ -23,7 +23,7 @@ async function uploadToImgBB(file) {
   const json = await res.json();
   if (!json.success) throw new Error(json.error?.message || "Upload failed.");
 
-  return json.data.url; // the direct image URL
+  return json.data.url;
 }
 
 // -----------------------------------------
@@ -36,13 +36,18 @@ export default function ProfileSettings() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [bio, setBio] = useState("");
-  const [avatar, setAvatar] = useState(null); // File object (new upload)
-  const [avatarPreview, setAvatarPreview] = useState(""); // data URL or existing URL
+  const [avatar, setAvatar] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState("");
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  // Password visibility toggles
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [profileSaving, setProfileSaving] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
@@ -54,7 +59,6 @@ export default function ProfileSettings() {
       setName(user.name || "");
       setEmail(user.email || "");
       setBio(user.bio || "");
-      // If user already has an image URL, show it as preview
       if (user.image) {
         setAvatarPreview(user.image);
       }
@@ -66,7 +70,6 @@ export default function ProfileSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type & size (max 5 MB)
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file.");
       return;
@@ -91,20 +94,18 @@ export default function ProfileSettings() {
 
     setProfileSaving(true);
     try {
-      let imageUrl = user.image; // keep existing if no new file
+      let imageUrl = user.image;
 
       if (avatar) {
-        // Upload new image to imgBB
         toast.loading("Uploading image…", { id: "upload" });
         imageUrl = await uploadToImgBB(avatar);
         toast.success("Image uploaded!", { id: "upload" });
       }
 
-      // Build update payload – email is NOT included
       const updateData = {
         name: name.trim(),
         bio: bio.trim(),
-        image: imageUrl || "", // imgBB URL or existing
+        image: imageUrl || "",
       };
 
       await authClient.updateUser(updateData);
@@ -133,11 +134,18 @@ export default function ProfileSettings() {
 
     setPasswordSaving(true);
     try {
-      await authClient.changePassword({
+      const { error } = await authClient.changePassword({
         currentPassword,
         newPassword,
+        revokeOtherSessions: false,
       });
-      toast.success("Password changed!");
+
+      if (error) {
+        toast.error(error.message || "Failed to change password.");
+        return;
+      }
+
+      toast.success("Password changed successfully!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -189,7 +197,6 @@ export default function ProfileSettings() {
             ) : (
               <Person className="w-16 h-16 text-on-surface-variant" />
             )}
-            {/* Upload overlay */}
             <div
               className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
               onClick={() => fileInputRef.current?.click()}
@@ -202,7 +209,6 @@ export default function ProfileSettings() {
             {email}
           </p>
 
-          {/* Hidden file input */}
           <input
             type="file"
             accept="image/*"
@@ -281,44 +287,100 @@ export default function ProfileSettings() {
               Security & Password
             </h3>
             <form onSubmit={handlePasswordSave} className="space-y-md">
-              <div className="flex flex-col gap-xs">
-                <label className="text-label-caps font-label-caps text-on-surface-variant">
+              {/* Current Password */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
                   Current Password
                 </label>
-                <Input
-                  type="password"
-                  placeholder="••••••••"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="rounded-lg border-outline-variant"
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    required
+                    className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                    aria-label="Toggle current password visibility"
+                  >
+                    {showCurrentPassword ? (
+                      <EyeSlash className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
+                </div>
               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-sm">
-                <div className="flex flex-col gap-xs">
-                  <label className="text-label-caps font-label-caps text-on-surface-variant">
+                {/* New Password */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
                     New Password
                   </label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="rounded-lg border-outline-variant"
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                      aria-label="Toggle new password visibility"
+                    >
+                      {showNewPassword ? (
+                        <EyeSlash className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-xs">
-                  <label className="text-label-caps font-label-caps text-on-surface-variant">
+
+                {/* Confirm New Password */}
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">
                     Confirm New Password
                   </label>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="rounded-lg border-outline-variant"
-                  />
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-outline w-5 h-5" />
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      className="w-full pl-10 pr-12 py-3 bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-base text-on-surface"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface-variant transition-colors"
+                      aria-label="Toggle confirm password visibility"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeSlash className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
+
               <div className="flex justify-end pt-xs">
                 <Button
                   type="submit"

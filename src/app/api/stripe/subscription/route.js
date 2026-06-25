@@ -12,25 +12,25 @@ export async function POST(req) {
       );
     }
 
-    const { artworkId } = await req.json();
+    const { tier } = await req.json();
 
-    if (!artworkId) {
+    if (!tier) {
       return NextResponse.json(
-        { error: "Artwork ID is required" },
+        { error: "Subscription tier is required" },
         { status: 400 }
       );
     }
 
     // Forward to backend API
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
-    const response = await fetch(`${baseUrl}/api/stripe/create-purchase-session`, {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const response = await fetch(`${baseUrl}/api/stripe/create-subscription-session`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${session.user.id}`,
         "x-user-id": session.user.id
       },
-      body: JSON.stringify({ artworkId })
+      body: JSON.stringify({ tier })
     });
 
     const data = await response.json();
@@ -41,9 +41,9 @@ export async function POST(req) {
 
     return NextResponse.json(data);
   } catch (err) {
-    console.error("Checkout session error:", err);
+    console.error("Subscription session error:", err);
     return NextResponse.json(
-      { error: err.message || "Failed to create checkout session" },
+      { error: err.message || "Failed to create subscription session" },
       { status: err.statusCode || 500 }
     );
   }

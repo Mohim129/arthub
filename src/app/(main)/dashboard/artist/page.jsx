@@ -1,13 +1,18 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSession } from "@/lib/auth-client";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import ArtistDashboardTabs from "@/components/dashboard/artist/ArtistDashboardTabs";
 
 function ArtistDashboardContent() {
   const { data: session, isPending } = useSession();
+  const [mounted, setMounted] = useState(false);
 
-  if (isPending) {
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted || isPending) {
     return (
       <div className="text-center py-20 font-body-large text-on-surface-variant">
         Verifying authorization...

@@ -78,11 +78,35 @@ export const getAllArtworks = async (params = {}) => {
   const data = await res.json();
   return normalizeArtworksResponse(data);
 };
+
 export const getArtwork = async (id) => {
   const res = await fetch(`${baseUrl}/api/artworks/${id}`);
   if (!res.ok) {
     if (res.status === 404) throw new Error("Artwork not found");
     throw new Error("Failed to fetch artwork");
   }
+  return res.json();
+};
+
+export const getArtworkComments = async (artworkId) => {
+  const res = await fetch(`${baseUrl}/api/artworks/${artworkId}/comments`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch comments");
+  }
+  return res.json();
+};
+
+export const postArtworkComment = async (artworkId, text) => {
+  const res = await fetch(`${baseUrl}/api/artworks/${artworkId}/comments`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || "Failed to post comment");
+  }
+
   return res.json();
 };

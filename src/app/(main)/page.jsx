@@ -1,6 +1,7 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import { categories } from "@/data/categories";
-import { browseArtworks } from "@/data/browseArtworks";
-import { topArtists } from "@/data/topArtists";
 import HeroCarousel from "@/components/HeroCarousel";
 import CategoryCard from "@/components/CategoryCard";
 import ArtworkCard from "@/components/ArtworkCard";
@@ -11,7 +12,50 @@ import { Button } from "@heroui/react";
 import { ChevronRight } from "@gravity-ui/icons";
 
 export default function Home() {
-  const isLoading = false;
+  const [featuredArtworks, setFeaturedArtworks] = useState([]);
+  const [topArtists, setTopArtists] = useState([]);
+  const [loadingArtworks, setLoadingArtworks] = useState(true);
+  const [loadingArtists, setLoadingArtists] = useState(true);
+  const [errorArtworks, setErrorArtworks] = useState(null);
+  const [errorArtists, setErrorArtists] = useState(null);
+
+  useEffect(() => {
+    const fetchFeaturedArtworks = async () => {
+      try {
+        setLoadingArtworks(true);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+        const response = await fetch(`${baseUrl}/api/artworks/featured`);
+        if (!response.ok) throw new Error("Failed to fetch featured artworks");
+        const data = await response.json();
+        setFeaturedArtworks(data);
+      } catch (err) {
+        setErrorArtworks(err.message);
+      } finally {
+        setLoadingArtworks(false);
+      }
+    };
+
+    fetchFeaturedArtworks();
+  }, []);
+
+  useEffect(() => {
+    const fetchTopArtists = async () => {
+      try {
+        setLoadingArtists(true);
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+        const response = await fetch(`${baseUrl}/api/artists/top`);
+        if (!response.ok) throw new Error("Failed to fetch top artists");
+        const data = await response.json();
+        setTopArtists(data);
+      } catch (err) {
+        setErrorArtists(err.message);
+      } finally {
+        setLoadingArtists(false);
+      }
+    };
+
+    fetchTopArtists();
+  }, []);
 
   return (
     <>
@@ -47,13 +91,25 @@ export default function Home() {
             </Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-lg">
-            {isLoading
+            {loadingArtworks
               ? Array.from({ length: 6 }).map((_, i) => (
                   <SkeletonCard key={i} />
                 ))
-              : browseArtworks
-                  .slice(0, 6)
-                  .map((art) => <ArtworkCard key={art.id} artwork={art} />)}
+              : errorArtworks
+                ? (
+                  <div className="col-span-full text-center text-on-surface-variant py-lg">
+                    {errorArtworks}
+                  </div>
+                )
+              : featuredArtworks.length > 0
+              ? featuredArtworks.map((art) => (
+                  <ArtworkCard key={art.id} artwork={art} />
+                ))
+              : (
+                <div className="col-span-full text-center text-on-surface-variant py-lg">
+                  No artworks available
+                </div>
+              )}
           </div>
         </div>
       </section>
@@ -63,9 +119,25 @@ export default function Home() {
           Top Artists This Month
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-lg">
-          {topArtists.map((artist) => (
-            <ArtistCard key={artist.id} artist={artist} />
-          ))}
+          {loadingArtists
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-96 bg-surface-container rounded-lg animate-pulse" />
+              ))
+            : errorArtists
+            ? (
+              <div className="col-span-full text-center text-on-surface-variant py-lg">
+                {errorArtists}
+              </div>
+            )
+            : topArtists.length > 0
+            ? topArtists.map((artist) => (
+                <ArtistCard key={artist.id} artist={artist} />
+              ))
+            : (
+              <div className="col-span-full text-center text-on-surface-variant py-lg">
+                No artists found
+              </div>
+            )}
         </div>
       </section>
 

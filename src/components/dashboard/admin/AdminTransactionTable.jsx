@@ -7,10 +7,11 @@ export default function AdminTransactionTable({ transactions }) {
   const [filterType, setFilterType] = useState("All");
 
   const filteredTransactions = transactions.filter((txn) => {
+    const q = searchQuery.toLowerCase();
     const matchesSearch = 
-      txn.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (txn.artwork && txn.artwork.toLowerCase().includes(searchQuery.toLowerCase()));
+      (txn.id && txn.id.toLowerCase().includes(q)) ||
+      (txn.userEmail && txn.userEmail.toLowerCase().includes(q)) ||
+      (txn.artworkTitle && txn.artworkTitle.toLowerCase().includes(q));
     
     if (filterType === "All") return matchesSearch;
     return matchesSearch && txn.type === filterType;
@@ -87,8 +88,8 @@ export default function AdminTransactionTable({ transactions }) {
                   key={txn.id}
                   className="hover:bg-surface-container-low/50 transition-colors"
                 >
-                  <td className="px-lg py-md font-bold text-on-surface">
-                    {txn.id}
+                  <td className="px-lg py-md font-bold text-on-surface text-xs">
+                    {txn.id?.slice(-8)?.toUpperCase()}
                   </td>
                   <td className="px-lg py-md">
                     <span
@@ -102,16 +103,16 @@ export default function AdminTransactionTable({ transactions }) {
                     </span>
                   </td>
                   <td className="px-lg py-md font-body-large text-on-surface-variant">
-                    {txn.email}
+                    {txn.userEmail || "Unknown"}
                   </td>
                   <td className="px-lg py-md font-body-large text-on-surface-variant">
-                    {txn.artwork || "N/A"}
+                    {txn.artworkTitle || (txn.type === "Subscription" ? "Membership Plan" : "N/A")}
                   </td>
                   <td className="px-lg py-md font-body-large text-on-surface-variant">
-                    {txn.date}
+                    {txn.createdAt ? new Date(txn.createdAt).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—"}
                   </td>
                   <td className="px-lg py-md font-h3 text-h3 text-primary text-right">
-                    {txn.amount}
+                    ${typeof txn.amount === "number" ? txn.amount.toFixed(2) : txn.amount}
                   </td>
                 </tr>
               ))
