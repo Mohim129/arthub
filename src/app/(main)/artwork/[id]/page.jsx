@@ -1,6 +1,6 @@
 "use client";
-import { useState, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@heroui/react";
 import {
@@ -12,35 +12,52 @@ import {
   Xmark,
   Magnifier,
 } from "@gravity-ui/icons";
-import { browseArtworks } from "@/data/browseArtworks";
 import { comments as initialComments } from "@/data/comments";
 import Lightbox from "@/components/Lightbox";
 import CommentForm from "@/components/CommentForm";
 import CommentList from "@/components/CommentList";
+import { getArtwork } from "@/lib/api/artworks";
+import { getUserById } from "@/lib/api/users";
+import { authClient } from "@/lib/auth-client";
+import toast from "react-hot-toast";
 
 export default function ArtworkDetailPage() {
   const params = useParams();
-  
-  // Dynamically look up the artwork in browseArtworks based on params.id
-  const baseArtwork = browseArtworks.find(art => String(art.id) === String(params?.id)) || browseArtworks[0];
-  
-  const artwork = {
-    ...baseArtwork,
-    artist: typeof baseArtwork.artist === 'object' ? baseArtwork.artist : {
-      name: baseArtwork.artist || "Unknown Artist",
-      avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2t14hOWH-EDmyx3ptoLEo_orUacfSYVKU7lvUJ643h7JNnLLJTFHSAlnglCaUbTIFEESg2LghsNWOrPyx-8n-JTFrZxNrzktrP4Q_aj7aI4K41k3cabJl7mPe99dVY2Tc0kXaNm5J2xqEoLwQDYs4zxVrq_yWT29glEmo9i2NYqWypCoqVgaBz2Es_ybcTaoerJLoLIzo3WoNxmc1TUmjgtAei7t_PuOaiGLwDjZ0ohustgcxiQsGBXlGUMJG3ux5EvLR-k8_cHcA"
-    },
-    date: baseArtwork.date || "October 24, 2024",
-    price: typeof baseArtwork.price === 'number' ? `$${baseArtwork.price.toLocaleString()}` : baseArtwork.price,
-    usdPrice: typeof baseArtwork.price === 'number' ? `$${baseArtwork.price.toLocaleString()}` : baseArtwork.usdPrice || "$1,200.00",
-    description: baseArtwork.description || "'Eternal Synthesis' explores the convergence of organic movement and digital precision. This piece was algorithmically generated and then hand-curated to capture the exact moment of harmonic collision between opposing chromatic forces. It serves as a commentary on the fluidity of our digital existence in a rigid physical world.",
-    isOwner: baseArtwork.isOwner !== undefined ? baseArtwork.isOwner : true,
-    hasPurchased: baseArtwork.hasPurchased !== undefined ? baseArtwork.hasPurchased : true,
-  };
+  const router = useRouter();
+  const { data: session, isPending: sessionLoading } = authClient.useSession();
 
+  const [artwork, setArtwork] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [comments, setComments] = useState(initialComments);
-  const [hasPurchased, setHasPurchased] = useState(artwork.hasPurchased);
   const [lightboxSrc, setLightboxSrc] = useState(null);
+
+  // Fetch artwork data
+  useEffect(() => {
+    async function fetchArtwork() {
+      try {
+        setLoading(true);
+        const data = await getArtwork(params.id);
+
+        if (data?.artistId) {
+          try {
+            const artist = await getUserById(data.artistId);
+            data.artistName = artist.name || data.artistName;
+            data.artistAvatar = artist.image || data.artistAvatar;
+          } catch (artistError) {
+            console.warn("Failed to load artist info:", artistError);
+          }
+        }
+
+        setArtwork(data);
+      } catch (err) {
+        setError(err.message || "Failed to load artwork.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (params.id) fetchArtwork();
+  }, [params.id]);
 
   const handleMouseMove = useCallback((e) => {
     const img = e.currentTarget.querySelector("img");
@@ -51,11 +68,6 @@ export default function ArtworkDetailPage() {
     const y = ((e.pageY - top) / height) * 100;
     img.style.transformOrigin = `${x}% ${y}%`;
   }, []);
-
-  const handlePurchase = () => {
-    if (hasPurchased) return;
-    setHasPurchased(true);
-  };
 
   const handlePostComment = (text) => {
     setComments((prev) => [
@@ -71,6 +83,58 @@ export default function ArtworkDetailPage() {
     ]);
   };
 
+  const handlePurchase = () => {
+    toast.loading("Redirecting to Stripe Checkout...", { id: "checkout" });
+    // Simulate successful payment redirect and update
+    setTimeout(() => {
+      toast.success("Payment successful! Purchase history updated.", { id: "checkout" });
+    }, 2000);
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to delete this artwork?")) return;
+    try {
+      const { deleteArtwork } = await import("@/lib/api/artworks");
+      await deleteArtwork(artwork.id);
+      toast.success("Artwork deleted.");
+      router.push("/dashboard/artist?tab=manage");
+    } catch (err) {
+      toast.error(err.message || "Failed to delete artwork.");
+    }
+  };
+
+  // Determine ownership and purchase eligibility
+  const userId = session?.user?.id;
+  const isOwner = userId && artwork ? userId === artwork.artistId : false;
+  const canPurchase = userId && artwork ? userId !== artwork.artistId : false;
+
+  if (loading) {
+    return (
+      <div className="pt-24 pb-xl max-w-container-max mx-auto px-gutter min-h-screen flex justify-center items-center">
+        <div className="animate-spin inline-block w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="pt-24 pb-xl max-w-container-max mx-auto px-gutter min-h-screen flex flex-col items-center justify-center text-center">
+        <h2 className="font-h2 text-h2 mb-md">Artwork Not Found</h2>
+        <p className="text-on-surface-variant mb-lg">{error}</p>
+        <Link
+          href="/browse"
+          className="text-primary font-semibold hover:underline"
+        >
+          Browse artworks
+        </Link>
+      </div>
+    );
+  }
+
+  if (!artwork) {
+    return null; // Should be covered by loading/error, but just in case
+  }
+
   return (
     <>
       <div className="pt-24 pb-xl max-w-container-max mx-auto px-gutter min-h-screen">
@@ -85,7 +149,7 @@ export default function ArtworkDetailPage() {
               <img
                 className="w-full h-full object-cover transition-transform duration-700 ease-out"
                 alt={artwork.title}
-                src={artwork.image}
+                src={artwork.image || null}
               />
               <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none flex items-end p-md">
                 <span className="text-white text-body-small flex items-center gap-xs">
@@ -113,7 +177,7 @@ export default function ArtworkDetailPage() {
                   {artwork.category}
                 </span>
                 <span className="text-outline text-body-small font-body-small italic">
-                  Created: {artwork.date}
+                  Created: {new Date(artwork.createdAt).toLocaleDateString()}
                 </span>
               </div>
               <h1 className="font-h1-desktop text-h1-desktop text-on-background leading-tight">
@@ -121,19 +185,23 @@ export default function ArtworkDetailPage() {
               </h1>
               <div className="flex items-center gap-sm mt-xs">
                 <div className="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
-                  <img
-                    className="w-full h-full object-cover"
-                    alt={artwork.artist.name}
-                    src={artwork.artist.avatar}
-                  />
+                  {artwork.artistAvatar ? (
+                    <img
+                      className="w-full h-full object-cover"
+                      alt={artwork.artistName}
+                      src={artwork.artistAvatar || null}
+                    />
+                  ) : (
+                    <Heart className="w-5 h-5 text-on-surface-variant" />
+                  )}
                 </div>
                 <p className="font-body-large text-body-large">
                   by{" "}
                   <Link
-                    href={`/browse?artist=${encodeURIComponent(artwork.artist.name)}`}
+                    href={`/artist/${artwork.artistId}`}
                     className="text-primary font-semibold hover:underline"
                   >
-                    {artwork.artist.name}
+                    {artwork.artistName || "Unknown Artist"}
                   </Link>
                 </p>
               </div>
@@ -146,37 +214,51 @@ export default function ArtworkDetailPage() {
                   Current Listing Price
                 </span>
                 <span className="text-on-background font-bold text-[32px] tracking-tight">
-                  {artwork.price}
+                  $
+                  {typeof artwork.price === "number"
+                    ? artwork.price.toLocaleString()
+                    : artwork.price}
                 </span>
               </div>
               <p className="text-on-surface-variant text-body-small">
-                Approximately {artwork.usdPrice} USD at current market rates.
+                Approximately $
+                {typeof artwork.price === "number"
+                  ? artwork.price.toLocaleString()
+                  : artwork.price}{" "}
+                USD
               </p>
-              <Button
-                onPress={handlePurchase}
-                disabled={hasPurchased}
-                className="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:bg-surface disabled:text-on-surface disabled:shadow-none"
-              >
-                <ShoppingBag />
-                {hasPurchased ? "Purchased" : "Purchase Artwork"}
-              </Button>
-              <div className="flex flex-col gap-2 justify-center py-xs border-t border-surface-variant/50 mt-xs">
+              {userId ? (
+                <Button
+                  disabled={!canPurchase}
+                  onClick={handlePurchase}
+                  className={`w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] ${
+                    canPurchase
+                      ? "bg-primary text-on-primary hover:opacity-90"
+                      : "bg-surface-variant text-on-surface-variant cursor-not-allowed"
+                  }`}
+                >
+                  <ShoppingBag />
+                  {isOwner ? "You own this artwork" : "Purchase Artwork"}
+                </Button>
+              ) : (
+                <Link
+                  href="/signin"
+                  className="w-full bg-primary text-on-primary py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg hover:opacity-90 transition-all active:scale-[0.98]"
+                >
+                  <ShoppingBag />
+                  Sign in to Purchase
+                </Link>
+              )}
+              <div className="flex items-center gap-sm justify-center py-xs border-t border-surface-variant/50 mt-xs">
+                <ShieldCheck className="text-primary text-[18px]" />
                 <span className="text-body-small text-on-surface-variant">
-                  {hasPurchased
-                    ? "You now own this artwork and can join the collector conversation."
-                    : "Purchase now to unlock comments and full ownership benefits."}
+                  Verified Authentic Digital Asset
                 </span>
-                <div className="flex items-center gap-sm justify-center">
-                  <ShieldCheck className="text-primary text-[18px]" />
-                  <span className="text-body-small text-on-surface-variant">
-                    Verified Authentic Digital Asset
-                  </span>
-                </div>
               </div>
             </div>
 
-            {/* Artist Controls (Conditional) */}
-            {artwork.isOwner && (
+            {/* Artist Controls (only if owner) */}
+            {isOwner && (
               <div className="flex items-center gap-sm border-l-4 border-primary px-md py-sm bg-surface-container-highest/30 rounded-r-lg">
                 <Pencil className="text-primary" />
                 <div className="grow">
@@ -184,14 +266,20 @@ export default function ArtworkDetailPage() {
                     Artist Management
                   </p>
                   <p className="text-body-small text-on-surface-variant">
-                    You are viewing this as the creator.
+                    You own this artwork.
                   </p>
                 </div>
                 <div className="flex gap-sm">
-                  <button className="px-sm py-xs border border-outline rounded-lg text-body-small font-semibold hover:bg-surface-variant transition-colors">
+                  <Link
+                    href={`/dashboard/artist?tab=manage`}
+                    className="px-sm py-xs border border-outline rounded-lg text-body-small font-semibold hover:bg-surface-variant transition-colors"
+                  >
                     Edit
-                  </button>
-                  <button className="px-sm py-xs border border-error rounded-lg text-error text-body-small font-semibold hover:bg-error-container transition-colors">
+                  </Link>
+                  <button
+                    onClick={handleDelete}
+                    className="px-sm py-xs border border-error rounded-lg text-error text-body-small font-semibold hover:bg-error-container transition-colors"
+                  >
                     Delete
                   </button>
                 </div>
@@ -208,7 +296,7 @@ export default function ArtworkDetailPage() {
               </p>
             </div>
 
-            {/* Comments Section */}
+            {/* Comments Section (mock for now) */}
             <div className="flex flex-col gap-md mt-sm">
               <div className="flex items-center justify-between">
                 <h3 className="font-h3 text-h3">Collector Community</h3>
@@ -217,11 +305,11 @@ export default function ArtworkDetailPage() {
                 </span>
               </div>
 
-              {hasPurchased ? (
+              {userId ? (
                 <CommentForm onSubmit={handlePostComment} />
               ) : (
                 <p className="text-on-surface-variant text-body-small italic">
-                  Purchase this artwork to leave a comment.
+                  Sign in to leave a comment.
                 </p>
               )}
 

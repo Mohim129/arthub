@@ -9,9 +9,40 @@ async function getClient() {
   return cachedClient;
 }
 
+export async function GET(request, { params }) {
+  try {
+    const { id } = params;
+    const mongoClient = await getClient();
+    const db = mongoClient.db(process.env.AUTH_DB_NAME || "arthub_db");
+    const collection = db.collection("artworks");
+
+    const artwork = await collection.findOne({ _id: new ObjectId(id) });
+    if (!artwork) {
+      return new Response(JSON.stringify({ error: "Artwork not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({ ...artwork, id: artwork._id.toString() }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  } catch (error) {
+    console.error("Failed to fetch artwork:", error);
+    return new Response(JSON.stringify({ error: "Failed to fetch artwork" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 export async function PUT(request, { params }) {
   try {
-    const { id } = await params;
+    const { id } = params;
     const updatedData = await request.json();
 
     // Remove MongoDB _id and id fields if they exist in body to prevent updating the immutable _id field
@@ -49,7 +80,7 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = await params;
+    const { id } = params;
 
     const mongoClient = await getClient();
     const db = mongoClient.db(process.env.AUTH_DB_NAME || "arthub_db");
