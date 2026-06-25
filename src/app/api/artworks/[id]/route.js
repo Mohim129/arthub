@@ -1,4 +1,6 @@
 import { MongoClient, ObjectId } from "mongodb";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 const client = new MongoClient(process.env.MONGO_DB_URI);
 let cachedClient = null;
@@ -11,7 +13,8 @@ async function getClient() {
 
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const awaitedParams = await params;
+    const { id } = awaitedParams;
     const mongoClient = await getClient();
     const db = mongoClient.db(process.env.AUTH_DB_NAME || "arthub_db");
     const collection = db.collection("artworks");
@@ -42,7 +45,8 @@ export async function GET(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const awaitedParams = await params;
+    const { id } = awaitedParams;
     const updatedData = await request.json();
 
     // Remove MongoDB _id and id fields if they exist in body to prevent updating the immutable _id field
@@ -80,11 +84,41 @@ export async function PUT(request, { params }) {
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const awaitedParams = await params;
+    const { id } = awaitedParams;
+
+    // 1. Verify session
+    const session = await auth.api.getSession({
+      headers: await headers(),
+    });
+
+    if (!session?.user?.id) {
+      return new Response(JSON.stringify({ error: "Access denied. Login required." }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const mongoClient = await getClient();
     const db = mongoClient.db(process.env.AUTH_DB_NAME || "arthub_db");
     const collection = db.collection("artworks");
+
+    // 2. Fetch the artwork to verify ownership
+    const artwork = await collection.findOne({ _id: new ObjectId(id) });
+    if (!artwork) {
+      return new Response(JSON.stringify({ error: "Artwork not found" }), {
+        status: 404,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // 3. Admin can delete any artwork, artist can only delete their own artwork
+    if (session.user.role !== "admin" && artwork.artistId !== session.user.id) {
+      return new Response(JSON.stringify({ error: "Unauthorized operation." }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
 
     const result = await collection.deleteOne({ _id: new ObjectId(id) });
 

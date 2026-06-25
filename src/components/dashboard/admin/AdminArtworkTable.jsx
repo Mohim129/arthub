@@ -7,8 +7,7 @@ export default function AdminArtworkTable({ artworks, onDelete = null }) {
 
   const filteredArtworks = artworks.filter((art) => 
     art.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    art.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    art.category.toLowerCase().includes(searchQuery.toLowerCase())
+    art.artistName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -36,13 +35,10 @@ export default function AdminArtworkTable({ artworks, onDelete = null }) {
           <thead className="bg-surface-container-low border-b border-outline-variant/30">
             <tr>
               <th className="px-lg py-md font-label-caps text-label-caps text-outline">
-                Artwork
+                Title
               </th>
               <th className="px-lg py-md font-label-caps text-label-caps text-outline">
-                Artist
-              </th>
-              <th className="px-lg py-md font-label-caps text-label-caps text-outline">
-                Category
+                Artist Name
               </th>
               <th className="px-lg py-md font-label-caps text-label-caps text-outline">
                 Price
@@ -59,30 +55,14 @@ export default function AdminArtworkTable({ artworks, onDelete = null }) {
                   key={art.id}
                   className="hover:bg-surface-container-low/50 transition-colors group"
                 >
-                  <td className="px-lg py-md">
-                    <div className="flex items-center gap-md">
-                      <div
-                        className="w-12 h-12 rounded bg-surface-variant overflow-hidden shrink-0 border border-outline-variant/20"
-                      >
-                        <img 
-                          src={art.image} 
-                          alt={art.title} 
-                          className="w-full h-full object-cover" 
-                        />
-                      </div>
-                      <span className="font-bold text-on-surface">{art.title}</span>
-                    </div>
+                  <td className="px-lg py-md font-bold text-on-surface">
+                    {art.title}
                   </td>
                   <td className="px-lg py-md font-body-large text-on-surface-variant">
-                    {art.artist}
-                  </td>
-                  <td className="px-lg py-md font-body-large text-on-surface-variant">
-                    <span className="bg-surface-container px-sm py-xs rounded-full text-xs font-semibold">
-                      {art.category}
-                    </span>
+                    {art.artistName}
                   </td>
                   <td className="px-lg py-md font-h3 text-h3 text-primary">
-                    {art.price}
+                    {typeof art.price === "number" ? `$${art.price}` : art.price}
                   </td>
                   <td className="px-lg py-md text-right">
                     <button
@@ -97,7 +77,7 @@ export default function AdminArtworkTable({ artworks, onDelete = null }) {
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center py-lg text-on-surface-variant font-body-large">
+                <td colSpan="4" className="text-center py-lg text-on-surface-variant font-body-large">
                   No artworks found matching search query.
                 </td>
               </tr>

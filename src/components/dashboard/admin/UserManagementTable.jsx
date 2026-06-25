@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Magnifier, TrashBin, ChevronLeft, ChevronRight } from "@gravity-ui/icons";
+import { Magnifier } from "@gravity-ui/icons";
 
-export default function UserManagementTable({ users, onRoleChange = null, onDelete = null }) {
+export default function UserManagementTable({ users, onRoleChange = null }) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredUsers = users.filter((user) => 
@@ -12,7 +12,7 @@ export default function UserManagementTable({ users, onRoleChange = null, onDele
   return (
     <section className="glass-card rounded-xl shadow-sm overflow-hidden mb-xl">
       <div className="p-lg border-b border-surface-variant flex flex-col md:flex-row justify-between items-start md:items-center gap-md">
-        <h4 className="font-h3 text-h3 text-on-surface">Active Users</h4>
+        <h4 className="font-h3 text-h3 text-on-surface">Manage Users</h4>
         <div className="relative w-full md:w-64">
           <Magnifier className="absolute left-sm top-1/2 -translate-y-1/2 text-outline" />
           <input
@@ -29,19 +29,13 @@ export default function UserManagementTable({ users, onRoleChange = null, onDele
           <thead className="bg-surface-container-low">
             <tr>
               <th className="px-lg py-md font-label-caps text-on-surface-variant">
-                User
+                Name
+              </th>
+              <th className="px-lg py-md font-label-caps text-on-surface-variant">
+                Email
               </th>
               <th className="px-lg py-md font-label-caps text-on-surface-variant">
                 Role
-              </th>
-              <th className="px-lg py-md font-label-caps text-on-surface-variant">
-                Status
-              </th>
-              <th className="px-lg py-md font-label-caps text-on-surface-variant">
-                Last Active
-              </th>
-              <th className="px-lg py-md font-label-caps text-on-surface-variant text-right">
-                Actions
               </th>
             </tr>
           </thead>
@@ -52,61 +46,28 @@ export default function UserManagementTable({ users, onRoleChange = null, onDele
                   key={user.id}
                   className="hover:bg-surface-container-low/50 transition-colors"
                 >
-                  <td className="px-lg py-md">
-                    <div className="flex items-center gap-sm">
-                      <div
-                        className={`w-10 h-10 rounded-full bg-${user.color}-container/20 flex items-center justify-center text-${user.color} font-bold`}
-                      >
-                        {user.initials}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-on-surface">
-                          {user.name}
-                        </p>
-                        <p className="text-body-small text-on-surface-variant">
-                          {user.email}
-                        </p>
-                      </div>
-                    </div>
+                  <td className="px-lg py-md font-semibold text-on-surface">
+                    {user.name}
+                  </td>
+                  <td className="px-lg py-md text-on-surface-variant text-body-small">
+                    {user.email}
                   </td>
                   <td className="px-lg py-md">
                     <select
-                      className="bg-surface-bright border border-outline-variant rounded-lg px-sm py-xs text-body-small focus:ring-primary cursor-pointer text-on-surface"
+                      className="bg-black border border-outline-variant rounded-lg px-sm py-xs text-body-small focus:ring-primary cursor-pointer text-on-surface"
                       value={user.role}
                       onChange={(e) => onRoleChange && onRoleChange(user.id, e.target.value)}
                     >
-                      <option value="Artist">Artist</option>
-                      <option value="Collector">Collector</option>
-                      <option value="Admin">Admin</option>
+                      <option value="user">User</option>
+                      <option value="artist">Artist</option>
+                      <option value="admin">Admin</option>
                     </select>
-                  </td>
-                  <td className="px-lg py-md">
-                    <span
-                      className={`px-sm py-xs rounded-full text-xs font-semibold ${
-                        user.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-orange-100 text-orange-800"
-                      }`}
-                    >
-                      {user.status}
-                    </span>
-                  </td>
-                  <td className="px-lg py-md text-on-surface-variant text-body-small">
-                    {user.lastActive}
-                  </td>
-                  <td className="px-lg py-md text-right">
-                    <button 
-                      onClick={() => onDelete && onDelete(user.id)}
-                      className="text-outline hover:text-error transition-colors cursor-pointer p-xs rounded-full hover:bg-error-container"
-                    >
-                      <TrashBin />
-                    </button>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan="5" className="text-center py-lg text-on-surface-variant font-body-large">
+                <td colSpan="3" className="text-center py-lg text-on-surface-variant font-body-large">
                   No users found matching search query.
                 </td>
               </tr>
@@ -118,17 +79,6 @@ export default function UserManagementTable({ users, onRoleChange = null, onDele
         <span className="text-body-small text-on-surface-variant">
           Showing 1-{filteredUsers.length} of {filteredUsers.length} users
         </span>
-        <div className="flex gap-xs">
-          <button className="p-xs rounded-lg hover:bg-surface-variant text-on-surface-variant">
-            <ChevronLeft />
-          </button>
-          <button className="px-sm py-xs rounded-lg bg-primary text-on-primary font-semibold text-body-small">
-            1
-          </button>
-          <button className="p-xs rounded-lg hover:bg-surface-variant text-on-surface-variant">
-            <ChevronRight />
-          </button>
-        </div>
       </div>
     </section>
   );

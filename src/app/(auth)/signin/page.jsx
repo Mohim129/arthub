@@ -28,8 +28,15 @@ export default function SignIn() {
       }
 
       toast.success("Signed in successfully! Redirecting…");
+      const userRole = data?.user?.role || "user";
       setTimeout(() => {
-        window.location.href = "/";
+        if (userRole === "admin") {
+          window.location.href = "/dashboard/admin";
+        } else if (userRole === "artist") {
+          window.location.href = "/dashboard/artist";
+        } else {
+          window.location.href = "/";
+        }
       }, 1500);
     } catch (err) {
       toast.error("An unexpected error occurred.");
@@ -44,7 +51,7 @@ export default function SignIn() {
     try {
       const { data, error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/",
+        callbackURL: "/dashboard?login=true",
       });
 
       if (error) {
