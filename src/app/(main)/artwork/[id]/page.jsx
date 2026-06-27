@@ -35,7 +35,7 @@ export default function ArtworkDetailPage() {
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
 
-  // Purchase check
+  // Purchase check – uses the dedicated endpoint
   const [hasPurchased, setHasPurchased] = useState(false);
   const [purchasesLoading, setPurchasesLoading] = useState(true);
 
@@ -76,25 +76,43 @@ export default function ArtworkDetailPage() {
     if (params.id) fetchComments();
   }, [params.id]);
 
-  // 3. Check if user purchased this artwork
+  // 3. Check if user purchased this artwork (uses new dedicated endpoint)
   useEffect(() => {
     if (!userId || !params.id) {
       setPurchasesLoading(false);
       return;
     }
-    async function checkPurchase() {
+    async function check() {
       try {
-        const purchases = await fetchWithAuth(`/api/users/${userId}/purchases`);
-        const bought = purchases.some((p) => p.artworkId === params.id);
-        setHasPurchased(bought);
+        const { purchased } = await fetchWithAuth(
+          `/api/artworks/${params.id}/purchased`,
+        );
+        setHasPurchased(purchased);
       } catch (e) {
         setHasPurchased(false);
       } finally {
         setPurchasesLoading(false);
       }
     }
-    checkPurchase();
+    check();
   }, [userId, params.id]);
+
+  // Purchase handler – redirect to Stripe Checkout
+  const handlePurchase = async () => {
+    try {
+      const res = await fetchWithAuth("/api/stripe/create-purchase-session", {
+        method: "POST",
+        body: JSON.stringify({ artworkId: artwork.id }),
+      });
+      if (res.url) {
+        window.location.href = res.url;
+      } else {
+        toast.error("Could not start payment. Please try again.");
+      }
+    } catch (err) {
+      toast.error(err.message || "Failed to initiate payment");
+    }
+  };
 
   // Post comment
   const handlePostComment = async () => {
@@ -108,6 +126,7 @@ export default function ArtworkDetailPage() {
       setComments((prev) => [res, ...prev]);
       setNewComment("");
       toast.success("Comment posted!");
+      window.location.reload();
     } catch (err) {
       toast.error(err.message || "Failed to post comment.");
     } finally {
@@ -268,6 +287,7 @@ export default function ArtworkDetailPage() {
               </div>
               {userId ? (
                 <Button
+                  onPress={handlePurchase}
                   disabled={isOwner}
                   className={`w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] ${
                     isOwner

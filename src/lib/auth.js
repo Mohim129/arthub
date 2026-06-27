@@ -1,12 +1,12 @@
-import { betterAuth } from "better-auth";
-import { MongoClient } from "mongodb";
-import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { getOAuthState } from "better-auth/api";
+const { betterAuth } = require("better-auth");
+const { MongoClient } = require("mongodb");
+const { mongodbAdapter } = require("better-auth/adapters/mongodb");
+const { getOAuthState } = require("better-auth/api");
 
 const client = new MongoClient(process.env.MONGO_DB_URI);
 const db = client.db(process.env.AUTH_DB_NAME);
 
-export const auth = betterAuth({
+const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
@@ -58,3 +58,6 @@ export const auth = betterAuth({
     },
   },
 });
+
+module.exports = { auth };
+

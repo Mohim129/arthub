@@ -53,9 +53,9 @@ export default function PortfolioGallery({ artworks, loading }) {
         )}
 
         {/* Remaining artworks */}
-        {artworks.slice(1).map((art) => (
+        {artworks.slice(1).map((art, idx) => (
           <Link
-            key={art.id}
+            key={art.uniqueKey || `${art.id}-${idx}`}
             href={`/artwork/${art.id}`}
             className={`relative rounded-xl overflow-hidden group block cursor-pointer ${
               artworks.length === 4 && art.id === artworks[2]?.id

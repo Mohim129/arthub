@@ -6,6 +6,7 @@ import SubscriptionTiers from "./SubscriptionTiers";
 import PortfolioGallery from "./PortfolioGallery";
 import ProfileSettings from "../ProfileSettings";
 import { authClient } from "@/lib/auth-client";
+import { fetchWithAuth } from "@/lib/fetchWithAuth";
 import toast from "react-hot-toast";
 
 export default function UserDashboardTabs() {
@@ -13,24 +14,22 @@ export default function UserDashboardTabs() {
   const router = useRouter();
   const tab = searchParams.get("tab") || "history";
   const sessionId = searchParams.get("session_id");
-  
+
   const { data: session } = authClient.useSession();
   const [purchases, setPurchases] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Finalize transaction if coming from Stripe
+  // Finalize Stripe transaction
   useEffect(() => {
     if (sessionId && session?.user?.id) {
       const finalizeTransaction = async () => {
         try {
-          const response = await fetch(`/api/stripe/session/${sessionId}`, {
-            credentials: "include",
-            headers: { "x-user-id": session.user.id },
-          });
-          const data = await response.json();
-          
+          const data = await fetchWithAuth(`/api/stripe/session/${sessionId}`);
           if (data.success) {
-            toast.success("Payment successful! Your purchase has been recorded.");
+            await authClient.getSession(); // refresh session to pick up updated tier
+            toast.success(
+              "Payment successful! Your purchase has been recorded.",
+            );
             await fetchPurchases();
             router.replace("/dashboard/user?tab=history");
           }
@@ -43,23 +42,15 @@ export default function UserDashboardTabs() {
     }
   }, [sessionId, session?.user?.id, router]);
 
+  // Fetch purchases from Express
   const fetchPurchases = async () => {
     if (!session?.user?.id) return;
-    
     try {
       setLoading(true);
-      const response = await fetch(`/api/users/${session.user.id}/purchases`, {
-        credentials: "same-origin",
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setPurchases(Array.isArray(data) ? data : data.purchases || []);
-      } else {
-        throw new Error(`Failed to fetch purchases (${response.status})`);
-      }
+      const data = await fetchWithAuth(
+        `/api/users/${session.user.id}/purchases`,
+      );
+      setPurchases(Array.isArray(data) ? data : data.purchases || []);
     } catch (err) {
       console.error("Error fetching purchases:", err);
       toast.error("Failed to load purchase history");
@@ -68,15 +59,16 @@ export default function UserDashboardTabs() {
     }
   };
 
-  // Fetch purchases when tab is history or bought, or when session changes
+  // Load purchases when relevant
   useEffect(() => {
     if (session?.user?.id && (tab === "history" || tab === "bought")) {
       fetchPurchases();
     }
   }, [session?.user?.id, tab]);
 
-  const boughtArtworks = purchases.map((p) => ({
+  const boughtArtworks = purchases.map((p, index) => ({
     id: p.artworkId || p.id,
+    uniqueKey: p._id || p.id || `${p.artworkId}-${index}`,
     title: p.artworkTitle,
     date: p.createdAt,
     image: p.artworkImage,
@@ -84,8 +76,12 @@ export default function UserDashboardTabs() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-xl">
-      {tab === "history" && <PurchaseHistoryTable purchases={purchases} loading={loading} />}
-      {tab === "bought" && <PortfolioGallery artworks={boughtArtworks} loading={loading} />}
+      {tab === "history" && (
+        <PurchaseHistoryTable purchases={purchases} loading={loading} />
+      )}
+      {tab === "bought" && (
+        <PortfolioGallery artworks={boughtArtworks} loading={loading} />
+      )}
       {tab === "profile" && (
         <ProfileSettings
           initialName={session?.user?.name || "User"}

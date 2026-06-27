@@ -1,32 +1,48 @@
-/**
- * Helper to make authenticated fetch requests
- * Should be called from within a component that has access to user session
- * @param {string} url - Full URL or just the endpoint path
- * @param {string} userId - Current user ID from authClient.useSession()
- * @param {object} options - Fetch options
- */
-export async function fetchWithAuth(url, userId, options = {}) {
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+
+export async function fetchWithAuth(endpoint, options = {}) {
+  // Get the current user's id from the session (client‑side)
+  let userId = "";
+  try {
+    const sessionRes = await import("@/lib/auth-client").then((m) =>
+      m.authClient.getSession(),
+    );
+    userId = sessionRes?.data?.user?.id || "";
+  } catch (e) {
+    // not critical – public endpoints don't need it
+  }
+
   const headers = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
+    ...(userId ? { "x-user-id": userId } : {}),
     ...options.headers,
-    ...(userId && { 'x-user-id': userId }),
-    ...(userId && { 'Authorization': `Bearer ${userId}` })
   };
 
-  return fetch(url, {
+  const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
-    headers
+    headers,
+    credentials: "include", // sends the session cookie too
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Request failed (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function fetchAPI(endpoint, userId, options = {}) {
+  const headers = {
+    "Content-Type": "application/json",
+    ...(userId ? { "x-user-id": userId } : {}),
+    ...(userId ? { "Authorization": `Bearer ${userId}` } : {}),
+    ...options.headers,
+  };
+  return fetch(`${BASE_URL}${endpoint}`, {
+    ...options,
+    headers,
+    credentials: "include",
   });
 }
 
-/**
- * Helper to fetch from backend API
- * @param {string} endpoint - API endpoint (e.g., '/api/artworks/featured')
- * @param {string} userId - Current user ID from authClient.useSession()
- * @param {object} options - Fetch options
- */
-export async function fetchAPI(endpoint, userId, options = {}) {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
-  return fetchWithAuth(`${baseUrl}${endpoint}`, userId, options);
-}
 
