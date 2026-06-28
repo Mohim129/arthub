@@ -1,27 +1,15 @@
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
+const BASE_URL = "/api/proxy";
 
 export async function fetchWithAuth(endpoint, options = {}) {
-  // Get the current user's id from the session (client‑side)
-  let userId = "";
-  try {
-    const sessionRes = await import("@/lib/auth-client").then((m) =>
-      m.authClient.getSession(),
-    );
-    userId = sessionRes?.data?.user?.id || "";
-  } catch (e) {
-    // not critical – public endpoints don't need it
-  }
-
   const headers = {
     "Content-Type": "application/json",
-    ...(userId ? { "x-user-id": userId } : {}),
     ...options.headers,
   };
 
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
     headers,
-    credentials: "include", // sends the session cookie too
+    credentials: "include",
   });
 
   if (!res.ok) {
@@ -44,5 +32,3 @@ export async function fetchAPI(endpoint, userId, options = {}) {
     credentials: "include",
   });
 }
-
-
