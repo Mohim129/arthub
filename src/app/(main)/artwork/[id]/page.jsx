@@ -263,7 +263,7 @@ export default function ArtworkDetailPage() {
                 <p className="font-body-large text-body-large">
                   by{" "}
                   <Link
-                    href={`/browse?artist=${encodeURIComponent(artwork.artistName)}`}
+                    href={`/artist/${artwork.artistId}`}
                     className="text-primary font-semibold hover:underline"
                   >
                     {artwork.artistName}
