@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Pencil,
@@ -7,10 +7,31 @@ import {
   ArrowRight,
   Picture,
   Xmark,
+  CloudArrowUpIn,
 } from "@gravity-ui/icons";
 import { getArtistArtworks, updateArtwork } from "@/lib/api/artworks";
 import { authClient } from "@/lib/auth-client";
 import toast from "react-hot-toast";
+
+async function uploadToImgBB(file) {
+  const apiKey = process.env.NEXT_PUBLIC_IMAGE_UPLOAD_API;
+  if (!apiKey) throw new Error("Image upload API key is missing.");
+
+  const formData = new FormData();
+  formData.append("image", file);
+
+  const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new Error("Image upload failed.");
+
+  const json = await res.json();
+  if (!json.success) throw new Error(json.error?.message || "Upload failed.");
+
+  return json.data.url;
+}
 
 /* ─── Edit Modal ─── */
 function EditModal({ artwork, onClose, onSaved }) {
@@ -20,8 +41,35 @@ function EditModal({ artwork, onClose, onSaved }) {
   const [price, setPrice] = useState(
     artwork.price ? artwork.price.toString().replace(/[^0-9.]/g, "") : ""
   );
-  const [image, setImage] = useState(artwork.image || "");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(artwork.image || "");
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handleImageFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be smaller than 10 MB.");
+      return;
+    }
+
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview("");
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -37,12 +85,24 @@ function EditModal({ artwork, onClose, onSaved }) {
 
     setSaving(true);
     try {
+      let finalImageUrl = artwork.image || "";
+
+      if (imageFile) {
+        setUploading(true);
+        toast.loading("Uploading artwork image…", { id: "upload" });
+        finalImageUrl = await uploadToImgBB(imageFile);
+        toast.success("Image uploaded!", { id: "upload" });
+        setUploading(false);
+      } else if (!imagePreview) {
+        finalImageUrl = "";
+      }
+
       const updatedData = {
         title: title.trim(),
         category,
         description: description.trim(),
         price: priceNum,
-        image: image.trim(),
+        image: finalImageUrl,
       };
       await updateArtwork(artwork.id, updatedData);
       onSaved({ ...artwork, ...updatedData });
@@ -51,6 +111,7 @@ function EditModal({ artwork, onClose, onSaved }) {
       toast.error(err.message || "Failed to update artwork.");
     } finally {
       setSaving(false);
+      setUploading(false);
     }
   };
 
@@ -157,27 +218,54 @@ function EditModal({ artwork, onClose, onSaved }) {
             </div>
           </div>
 
-          {/* Image URL */}
+          {/* Artwork Image Upload */}
           <div className="flex flex-col gap-xs">
             <label className="text-label-caps font-label-caps text-on-surface-variant">
-              IMAGE URL
+              ARTWORK IMAGE
             </label>
-            <input
-              type="text"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
-              placeholder="https://example.com/image.jpg"
-              className="w-full rounded-lg border border-outline-variant/30 focus:ring-2 focus:ring-primary focus:border-primary bg-surface-container-low px-3 py-2.5 text-on-surface outline-none transition-all"
-            />
-            {image && (
-              <div className="mt-2 w-20 h-20 rounded-lg overflow-hidden border border-outline-variant/20 bg-surface-variant">
+
+            {imagePreview ? (
+              <div className="relative rounded-xl overflow-hidden border border-outline-variant/30 bg-surface-container-low max-h-[240px] flex items-center justify-center group">
                 <img
-                  src={image}
-                  alt="Preview"
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                  }}
+                  src={imagePreview}
+                  alt="Artwork preview"
+                  className="max-h-[240px] object-contain w-full"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-md">
+                  <label className="bg-white text-on-surface px-md py-sm rounded-lg font-bold cursor-pointer hover:bg-surface-bright shadow-sm">
+                    Change Image
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageFileChange}
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="bg-error text-on-error p-sm rounded-full shadow-sm hover:opacity-90"
+                  >
+                    <Xmark className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div
+                className="border-2 border-dashed border-outline-variant rounded-xl p-lg flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <CloudArrowUpIn className="text-primary text-[40px] mb-sm" />
+                <h3 className="font-h3 text-h3 mb-xs">Click to upload</h3>
+                <p className="text-body-small text-on-surface-variant">
+                  JPG, PNG or GIF (Max 10 MB)
+                </p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleImageFileChange}
                 />
               </div>
             )}
@@ -194,10 +282,10 @@ function EditModal({ artwork, onClose, onSaved }) {
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="flex-[2] bg-primary text-on-primary py-2.5 rounded-lg font-bold shadow-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? "Saving…" : "Save Changes"}
+              {uploading ? "Uploading image…" : saving ? "Saving…" : "Save Changes"}
             </button>
           </div>
         </form>
