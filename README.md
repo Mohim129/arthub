@@ -1,10 +1,4 @@
-Here are the two README files—one for the client and one for the server. You can copy each into the root of the respective repository.
 
----
-
-### Client‑Side README (`README.md` in your frontend repo)
-
-```markdown
 # ArtHub – Online Art Marketplace (Frontend)
 
 Live Site: [https://arthub-sigma.vercel.app/](https://arthub-sigma.vercel.app/)
