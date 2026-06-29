@@ -48,7 +48,7 @@ arthub/
 ## Getting Started
 1. **Clone the repo**
    ```bash
-   git clone <client-repo-url>
+   (get it yourself from the link)
    cd arthub
    ```
 2. **Install dependencies**
