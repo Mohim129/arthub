@@ -48,10 +48,14 @@ async function proxyRequest(req, { params }) {
     const targetUrl = `${BACKEND_URL}${backendPath}${url.search}`;
 
     const cookieHeader = req.headers.get("cookie");
+    const authHeader = req.headers.get("authorization");
 
     const headers = {};
     if (cookieHeader) {
       headers.Cookie = cookieHeader;
+    }
+    if (authHeader) {
+      headers.Authorization = authHeader;
     }
 
     const contentType = req.headers.get("content-type");

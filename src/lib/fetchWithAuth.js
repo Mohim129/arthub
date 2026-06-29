@@ -1,3 +1,9 @@
+let jwtToken = null;
+
+export const setJwtToken = (token) => {
+  jwtToken = token;
+};
+
 const BASE_URL = "/api/proxy";
 
 export async function fetchWithAuth(endpoint, options = {}) {
@@ -5,6 +11,10 @@ export async function fetchWithAuth(endpoint, options = {}) {
     "Content-Type": "application/json",
     ...options.headers,
   };
+
+  if (jwtToken) {
+    headers["Authorization"] = `Bearer ${jwtToken}`;
+  }
 
   const res = await fetch(`${BASE_URL}${endpoint}`, {
     ...options,
@@ -23,7 +33,7 @@ export async function fetchAPI(endpoint, userId, options = {}) {
   const headers = {
     "Content-Type": "application/json",
     ...(userId ? { "x-user-id": userId } : {}),
-    ...(userId ? { "Authorization": `Bearer ${userId}` } : {}),
+    ...(jwtToken ? { "Authorization": `Bearer ${jwtToken}` } : (userId ? { "Authorization": `Bearer ${userId}` } : {})),
     ...options.headers,
   };
   return fetch(`${BASE_URL}${endpoint}`, {
@@ -32,3 +42,4 @@ export async function fetchAPI(endpoint, userId, options = {}) {
     credentials: "include",
   });
 }
+
