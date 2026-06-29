@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import { headers as nextHeaders } from "next/headers";
+import { auth } from "@/lib/auth";
+import { ensureArtworkHasDescription } from "@/lib/artwork-description";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:5000";
 
@@ -7,12 +10,44 @@ async function proxyRequest(req, { params }) {
     const { path } = await params;
     const pathSegments = Array.isArray(path) ? path.join("/") : path;
     const backendPath = `/${pathSegments}`;
+    const method = req.method;
+
+    let bodyText = null;
+    if (method !== "GET" && method !== "HEAD") {
+      bodyText = await req.text();
+    }
+
+    if (
+      method === "POST" &&
+      pathSegments === "api/stripe/create-purchase-session"
+    ) {
+      const session = await auth.api.getSession({
+        headers: await nextHeaders(),
+      });
+      if (!session?.user) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+      if (session.user.role !== "user") {
+        return NextResponse.json(
+          { error: "Only collectors can purchase artwork" },
+          { status: 403 },
+        );
+      }
+
+      if (bodyText) {
+        try {
+          const { artworkId } = JSON.parse(bodyText);
+          if (artworkId) await ensureArtworkHasDescription(artworkId);
+        } catch (parseErr) {
+          console.error("Purchase session body parse error:", parseErr);
+        }
+      }
+    }
 
     const url = new URL(req.url);
     const targetUrl = `${BACKEND_URL}${backendPath}${url.search}`;
 
     const cookieHeader = req.headers.get("cookie");
-    const method = req.method;
 
     const headers = {};
     if (cookieHeader) {
@@ -25,9 +60,8 @@ async function proxyRequest(req, { params }) {
     }
 
     const fetchOptions = { method, headers };
-
-    if (method !== "GET" && method !== "HEAD") {
-      fetchOptions.body = await req.text();
+    if (bodyText !== null) {
+      fetchOptions.body = bodyText;
     }
 
     const response = await fetch(targetUrl, fetchOptions);

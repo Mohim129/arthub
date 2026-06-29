@@ -3,6 +3,8 @@ import { useState, useRef } from "react";
 import { Button, Input, TextArea } from "@heroui/react";
 import { addArtwork } from "@/lib/actions/artworks";
 import { updateArtwork } from "@/lib/api/artworks";
+import CategorySelect from "@/components/CategorySelect";
+import { DEFAULT_ART_CATEGORY } from "@/data/categories";
 import toast from "react-hot-toast";
 import { Camera, CloudArrowUpIn, Xmark } from "@gravity-ui/icons";
 
@@ -35,7 +37,7 @@ export default function ArtworkForm({
 }) {
   const [title, setTitle] = useState(artworkToEdit?.title || "");
   const [category, setCategory] = useState(
-    artworkToEdit?.category || "Generative Art",
+    artworkToEdit?.category || DEFAULT_ART_CATEGORY,
   );
   const [description, setDescription] = useState(
     artworkToEdit?.description || "",
@@ -148,7 +150,7 @@ export default function ArtworkForm({
       // Reset form if not editing
       if (!artworkToEdit) {
         setTitle("");
-        setCategory("Generative Art");
+        setCategory(DEFAULT_ART_CATEGORY);
         setDescription("");
         setPrice("");
         setImageFile(null);
@@ -285,18 +287,11 @@ export default function ArtworkForm({
             <label className="text-label-caps font-label-caps text-on-surface-variant">
               CATEGORY
             </label>
-            <select
+            <CategorySelect
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-outline-variant/30 focus:ring-primary focus:border-primary bg-surface-container-low px-3 py-2 text-on-surface h-[44px]"
-            >
-              <option>Generative Art</option>
-              <option>Digital Painting</option>
-              <option>3D Abstract</option>
-              <option>Photography</option>
-              <option>Digital Illustration</option>
-              <option>Painting</option>
-            </select>
+              className="rounded-lg border border-outline-variant/30 focus:ring-primary focus:border-primary bg-surface-container-low px-3 py-2 text-on-surface h-[44px] w-full"
+            />
           </div>
           <div className="flex flex-col gap-xs md:col-span-2">
             <label className="text-label-caps font-label-caps text-on-surface-variant">

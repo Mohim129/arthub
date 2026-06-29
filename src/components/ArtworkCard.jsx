@@ -33,7 +33,7 @@ export default function ArtworkCard({ artwork }) {
         <div className="flex flex-col items-start p-3 sm:p-4">
           <h3 className="text-body-large sm:text-h3 font-h3 mb-1 text-on-surface dark:text-inverse-on-surface truncate w-full">{artwork.title}</h3>
           <p className="text-on-surface-variant dark:text-outline-variant font-body-small mb-2 sm:mb-4">
-            by {artwork.artist}
+            by {artwork.artistName || artwork.artist || "Unknown Artist"}
           </p>
           <div className="flex justify-between items-center w-full">
             <span className="text-primary dark:text-primary-fixed-dim font-bold text-body-large sm:text-xl">

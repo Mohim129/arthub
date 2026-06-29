@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb";
+import { resolveArtworkDescription } from "@/lib/artwork-description";
 
 const client = new MongoClient(process.env.MONGO_DB_URI);
 let cachedClient = null;
@@ -59,6 +60,7 @@ export async function POST(request) {
     const collection = db.collection("artworks");
     const result = await collection.insertOne({
       ...artwork,
+      description: resolveArtworkDescription(artwork),
       createdAt: new Date(),
     });
 

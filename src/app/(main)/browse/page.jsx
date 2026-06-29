@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import EmptyState from "@/components/EmptyState";
 import { Card, Button, Input } from "@heroui/react";
@@ -12,21 +13,16 @@ import {
 } from "@gravity-ui/icons";
 import Link from "next/link";
 import { getAllArtworks } from "@/lib/api/artworks";
+import {
+  BROWSE_CATEGORIES,
+  ALL_MEDIA_LABEL,
+  parseCategoryFromParam,
+} from "@/data/categories";
 
 const ITEMS_PER_PAGE = 8;
 
-const categories = [
-  "All Media",
-  "Digital Painting",
-  "3D Abstract",
-  "Generative Art",
-  "Photography",
-  "Digital Illustration",
-  "Painting",
-  "Mixed Media",
-];
-
 export default function BrowsePage() {
+  const searchParams = useSearchParams();
   const [artworks, setArtworks] = useState([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,13 +31,19 @@ export default function BrowsePage() {
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [category, setCategory] = useState("All Media");
+  const [category, setCategory] = useState(() =>
+    parseCategoryFromParam(searchParams.get("category")),
+  );
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [sortBy, setSortBy] = useState("Newest First");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   const debounceRef = useRef(null);
+
+  useEffect(() => {
+    setCategory(parseCategoryFromParam(searchParams.get("category")));
+  }, [searchParams]);
 
   const getSortParams = () => {
     if (sortBy === "Price: Low to High")
@@ -63,7 +65,7 @@ export default function BrowsePage() {
       const params = {
         page: currentPage,
         limit: ITEMS_PER_PAGE,
-        category: category !== "All Media" ? category : undefined,
+        category: category !== ALL_MEDIA_LABEL ? category : undefined,
         minPrice: priceMin || undefined,
         maxPrice: priceMax || undefined,
         search: searchTerm || undefined,
@@ -107,7 +109,7 @@ export default function BrowsePage() {
 
   const resetFilters = () => {
     setSearchTerm("");
-    setCategory("All Media");
+    setCategory(ALL_MEDIA_LABEL);
     setPriceMin("");
     setPriceMax("");
     setSortBy("Newest First");
@@ -179,12 +181,12 @@ export default function BrowsePage() {
             Showing {artworks.length} of {total} results
           </span>
         </div>
-        {(category !== "All Media" || priceMin || priceMax || searchTerm) && (
+        {(category !== ALL_MEDIA_LABEL || priceMin || priceMax || searchTerm) && (
           <div className="flex flex-wrap gap-sm items-center">
-            {category !== "All Media" && (
+            {category !== ALL_MEDIA_LABEL && (
               <span className="px-sm py-1 bg-primary/10 text-primary dark:text-primary-fixed-dim rounded-full text-body-small flex items-center gap-xs">
                 {category}
-                <button onClick={() => setCategory("All Media")}>
+                <button onClick={() => setCategory(ALL_MEDIA_LABEL)}>
                   <Xmark className="text-[16px] w-3 h-3 cursor-pointer" />
                 </button>
               </span>
@@ -236,7 +238,7 @@ export default function BrowsePage() {
               Categories
             </h4>
             <div className="flex flex-col gap-xs">
-              {categories.map((cat) => (
+              {BROWSE_CATEGORIES.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
@@ -285,7 +287,7 @@ export default function BrowsePage() {
             </div>
           </div>
 
-          {(category !== "All Media" || priceMin || priceMax) && (
+          {(category !== ALL_MEDIA_LABEL || priceMin || priceMax) && (
             <div className="pt-sm border-t border-outline-variant/20 mt-sm">
               <Button
                 onClick={resetFilters}
@@ -425,7 +427,7 @@ export default function BrowsePage() {
                 Categories
               </h4>
               <div className="flex flex-col gap-xs">
-                {categories.map((cat) => (
+                {BROWSE_CATEGORIES.map((cat) => (
                   <button
                     key={cat}
                     onClick={() => setCategory(cat)}
@@ -476,7 +478,7 @@ export default function BrowsePage() {
           </div>
 
           <div className="pt-md border-t border-outline-variant/30 space-y-sm">
-            {(category !== "All Media" || priceMin || priceMax) && (
+            {(category !== ALL_MEDIA_LABEL || priceMin || priceMax) && (
               <Button
                 onClick={resetFilters}
                 variant="light"

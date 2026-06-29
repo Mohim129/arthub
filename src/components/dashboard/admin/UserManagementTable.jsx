@@ -54,13 +54,13 @@ export default function UserManagementTable({ users, onRoleChange = null }) {
                   </td>
                   <td className="px-lg py-md">
                     <select
-                      className="bg-black border border-outline-variant rounded-lg px-sm py-xs text-body-small focus:ring-primary cursor-pointer text-on-surface"
+                      className="bg-surface-container-lowest dark:bg-surface-container-low border border-outline-variant rounded-lg px-sm py-sm text-body-small text-on-surface focus:ring-2 focus:ring-primary focus:border-primary outline-none cursor-pointer"
                       value={user.role}
                       onChange={(e) => onRoleChange && onRoleChange(user.id, e.target.value)}
                     >
-                      <option value="user">User</option>
-                      <option value="artist">Artist</option>
-                      <option value="admin">Admin</option>
+                      <option value="user" className="bg-surface-container-lowest text-on-surface">User</option>
+                      <option value="artist" className="bg-surface-container-lowest text-on-surface">Artist</option>
+                      <option value="admin" className="bg-surface-container-lowest text-on-surface">Admin</option>
                     </select>
                   </td>
                 </tr>

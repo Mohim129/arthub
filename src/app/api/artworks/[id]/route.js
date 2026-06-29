@@ -1,6 +1,7 @@
 import { MongoClient, ObjectId } from "mongodb";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { resolveArtworkDescription } from "@/lib/artwork-description";
 
 const client = new MongoClient(process.env.MONGO_DB_URI);
 let cachedClient = null;
@@ -52,6 +53,10 @@ export async function PUT(request, { params }) {
     // Remove MongoDB _id and id fields if they exist in body to prevent updating the immutable _id field
     delete updatedData._id;
     delete updatedData.id;
+
+    if ("description" in updatedData) {
+      updatedData.description = resolveArtworkDescription(updatedData);
+    }
 
     const mongoClient = await getClient();
     const db = mongoClient.db(process.env.AUTH_DB_NAME || "arthub_db");

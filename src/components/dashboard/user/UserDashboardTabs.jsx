@@ -1,6 +1,6 @@
 "use client";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PurchaseHistoryTable from "./PurchaseHistoryTable";
 import SubscriptionTiers from "./SubscriptionTiers";
 import PortfolioGallery from "./PortfolioGallery";
@@ -66,13 +66,37 @@ export default function UserDashboardTabs() {
     }
   }, [session?.user?.id, tab]);
 
-  const boughtArtworks = purchases.map((p, index) => ({
-    id: p.artworkId || p.id,
-    uniqueKey: p._id || p.id || `${p.artworkId}-${index}`,
-    title: p.artworkTitle,
-    date: p.createdAt,
-    image: p.artworkImage,
-  }));
+  const boughtArtworks = useMemo(() => {
+    const grouped = new Map();
+
+    for (const p of purchases) {
+      const id = p.artworkId || p.id;
+      if (!id) continue;
+
+      const existing = grouped.get(id);
+      if (existing) {
+        existing.count += 1;
+        if (
+          p.createdAt &&
+          (!existing.date || new Date(p.createdAt) > new Date(existing.date))
+        ) {
+          existing.date = p.createdAt;
+        }
+      } else {
+        grouped.set(id, {
+          id,
+          title: p.artworkTitle,
+          date: p.createdAt,
+          image: p.artworkImage,
+          count: 1,
+        });
+      }
+    }
+
+    return Array.from(grouped.values()).sort(
+      (a, b) => new Date(b.date || 0) - new Date(a.date || 0),
+    );
+  }, [purchases]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-xl">

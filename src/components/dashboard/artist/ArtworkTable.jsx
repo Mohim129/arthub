@@ -11,6 +11,8 @@ import {
 } from "@gravity-ui/icons";
 import { getArtistArtworks, updateArtwork } from "@/lib/api/artworks";
 import { authClient } from "@/lib/auth-client";
+import CategorySelect from "@/components/CategorySelect";
+import { DEFAULT_ART_CATEGORY } from "@/data/categories";
 import toast from "react-hot-toast";
 
 async function uploadToImgBB(file) {
@@ -36,7 +38,7 @@ async function uploadToImgBB(file) {
 /* ─── Edit Modal ─── */
 function EditModal({ artwork, onClose, onSaved }) {
   const [title, setTitle] = useState(artwork.title || "");
-  const [category, setCategory] = useState(artwork.category || "Generative Art");
+  const [category, setCategory] = useState(artwork.category || DEFAULT_ART_CATEGORY);
   const [description, setDescription] = useState(artwork.description || "");
   const [price, setPrice] = useState(
     artwork.price ? artwork.price.toString().replace(/[^0-9.]/g, "") : ""
@@ -166,18 +168,11 @@ function EditModal({ artwork, onClose, onSaved }) {
             <label className="text-label-caps font-label-caps text-on-surface-variant">
               CATEGORY
             </label>
-            <select
+            <CategorySelect
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="rounded-lg border border-outline-variant/30 focus:ring-2 focus:ring-primary focus:border-primary bg-surface-container-low px-3 py-2.5 text-on-surface outline-none transition-all"
-            >
-              <option>Generative Art</option>
-              <option>Digital Painting</option>
-              <option>3D Abstract</option>
-              <option>Photography</option>
-              <option>Digital Illustration</option>
-              <option>Painting</option>
-            </select>
+              className="rounded-lg border border-outline-variant/30 focus:ring-2 focus:ring-primary focus:border-primary bg-surface-container-low px-3 py-2.5 text-on-surface outline-none transition-all w-full"
+            />
           </div>
 
           {/* Description */}

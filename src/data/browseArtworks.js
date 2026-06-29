@@ -67,7 +67,7 @@ export const browseArtworks = [
     title: "Obsidian Peaks",
     artist: "David Chen",
     price: 2100,
-    category: "Mixed Media",
+    category: "3D Abstract",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuAPb8MYcBEIiNycDt7KUt_gbGj0uMIq-m4mGWbbw_m-ijv8yGtorIzDCzz2S2kAOG7JFdo7yIRghNkamGgMl3Cr0pVGpkDDHilFa_lyarRM3CFrenVUMn1QlH_nm3hbZ_k1maM0qTdr1yfQIxSaPXXFPxufuyZLiyVwDcxU9cQ37gReFstUXUYEiu9aHa3BoguVjaUFbBIKAKWOlcX9eB0MESFOHLVKNHSdNKI5TAlMBYEbExmo4QcrtKrExIeoIgwjr6LbYdK21X5r",
   },

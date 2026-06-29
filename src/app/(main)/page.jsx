@@ -66,9 +66,17 @@ useEffect(() => {
       <HeroCarousel />
 
       <section className="py-xl max-w-container-max mx-auto px-gutter">
+        <div className="mb-lg text-center md:text-left">
+          <span className="font-label-caps text-label-caps text-primary dark:text-primary-fixed-dim mb-xs block">
+            EXPLORE BY STYLE
+          </span>
+          <h2 className="font-h1-desktop text-h1-desktop text-on-surface dark:text-inverse-on-surface">
+            Art Categories
+          </h2>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-md">
-          {categories.map((cat, idx) => (
-            <CategoryCard key={idx} category={cat} />
+          {categories.map((cat) => (
+            <CategoryCard key={cat.name} category={cat} />
           ))}
         </div>
       </section>

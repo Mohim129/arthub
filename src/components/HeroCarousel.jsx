@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { getCategoryBrowseHref } from "@/data/categories";
 import { Button } from "@heroui/react";
 import { ArrowRight } from "@gravity-ui/icons";
 
@@ -20,7 +21,7 @@ const slides = [
     subtitle:
       "Unlock ownership of verified digital art from leading contemporary creators.",
     cta: "Explore Digital Art",
-    ctaLink: "/browse?category=digital",
+    ctaLink: getCategoryBrowseHref("Digital Painting"),
   },
 ];
 

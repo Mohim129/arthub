@@ -1,6 +1,8 @@
 "use server";
 
 import { MongoClient } from "mongodb";
+import { resolveArtworkDescription } from "@/lib/artwork-description";
+import { DEFAULT_ART_CATEGORY } from "@/data/categories";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 
@@ -31,8 +33,8 @@ export const addArtwork = async (newArtworkData) => {
   // 3. Build the artwork document
   const artwork = {
     title: newArtworkData.title,
-    category: newArtworkData.category || "Generative Art",
-    description: newArtworkData.description || "",
+    category: newArtworkData.category || DEFAULT_ART_CATEGORY,
+    description: resolveArtworkDescription(newArtworkData),
     price: newArtworkData.price, // number from the form
     image: newArtworkData.image || "",
     artistId: session.user.id, // string version of MongoDB _id

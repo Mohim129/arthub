@@ -40,7 +40,9 @@ export default function ArtworkDetailPage() {
   const [purchasesLoading, setPurchasesLoading] = useState(true);
 
   const userId = session?.user?.id;
+  const userRole = session?.user?.role;
   const isOwner = userId && artwork ? userId === artwork.artistId : false;
+  const canPurchase = userRole === "user" && !isOwner;
 
   // 1. Fetch artwork
   useEffect(() => {
@@ -99,6 +101,10 @@ export default function ArtworkDetailPage() {
 
   // Purchase handler – redirect to Stripe Checkout
   const handlePurchase = async () => {
+    if (!canPurchase) {
+      toast.error("Only collectors can purchase artwork");
+      return;
+    }
     try {
       const res = await fetchWithAuth("/api/stripe/create-purchase-session", {
         method: "POST",
@@ -286,18 +292,25 @@ export default function ArtworkDetailPage() {
                 </span>
               </div>
               {userId ? (
-                <Button
-                  onPress={handlePurchase}
-                  disabled={isOwner}
-                  className={`w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] ${
-                    isOwner
-                      ? "bg-surface-variant text-on-surface-variant cursor-not-allowed"
-                      : "bg-primary text-on-primary hover:opacity-90"
-                  }`}
-                >
-                  <ShoppingBag />
-                  {isOwner ? "You own this artwork" : "Purchase Artwork"}
-                </Button>
+                canPurchase ? (
+                  <Button
+                    onPress={handlePurchase}
+                    className="w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98] bg-primary text-on-primary hover:opacity-90"
+                  >
+                    <ShoppingBag />
+                    Purchase Artwork
+                  </Button>
+                ) : (
+                  <Button
+                    disabled
+                    className="w-full py-md rounded-xl font-bold text-h3 flex items-center justify-center gap-sm bg-surface-variant text-on-surface-variant cursor-not-allowed"
+                  >
+                    <ShoppingBag />
+                    {isOwner
+                      ? "You own this artwork"
+                      : "Collectors only"}
+                  </Button>
+                )
               ) : (
                 <Link
                   href="/signin"
