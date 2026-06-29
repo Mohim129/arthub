@@ -41,6 +41,7 @@ export async function GET(request) {
             name: 1,
             email: 1,
             role: 1,
+            tier: 1,
           },
         }
       )
@@ -52,6 +53,7 @@ export async function GET(request) {
       name: user.name,
       email: user.email,
       role: user.role || "user",
+      tier: user.tier || "free",
     }));
 
     return new Response(JSON.stringify(transformedUsers), {

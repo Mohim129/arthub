@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Moon, Sun, Person, Bars, Xmark } from "@gravity-ui/icons";
-import { authClient, useSession } from "@/lib/auth-client"; // adjust path
+import { authClient, useSession } from "@/lib/auth-client";
 import toast from "react-hot-toast";
 
 const emptySubscribe = () => () => {};
@@ -29,28 +29,17 @@ export default function Navbar() {
 
   const isActive = (href) => pathname === href;
 
-  const linkClass =
-    "font-body-large text-body-large pb-1 transition-colors text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-b-2 border-transparent";
-
-  const mobileLinkClass =
-    "py-3 px-4 rounded-lg transition-all duration-200 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low hover:text-primary dark:hover:text-primary-fixed-dim";
-
-  const mobileActiveLinkClass =
-    "py-3 px-4 rounded-lg transition-all duration-200 text-primary dark:text-primary-fixed-dim font-semibold bg-primary-container/10";
-
   const handleLogout = async () => {
     try {
       await authClient.signOut();
       toast.success("Logged out successfully");
       setMenuOpen(false);
-      // Force a full page reload to clear client state
       window.location.href = "/";
     } catch (error) {
       toast.error("Logout failed");
     }
   };
 
-  // Build nav links array: always public, conditionally add Dashboard
   const navLinks = session
     ? [...publicLinks, { href: "/dashboard", label: "Dashboard" }]
     : publicLinks;
@@ -72,7 +61,11 @@ export default function Navbar() {
             <Link
               key={href}
               href={href}
-              className="font-body-large text-body-large pb-1 transition-colors text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed-dim border-b-2 border-transparent"
+              className={`font-body-large text-body-large pb-1 transition-colors border-b-2 ${
+                isActive(href)
+                  ? "text-primary dark:text-primary-fixed-dim border-primary dark:border-primary-fixed-dim font-semibold"
+                  : "text-on-surface-variant dark:text-outline-variant border-transparent hover:text-primary dark:hover:text-primary-fixed-dim"
+              }`}
             >
               {label}
             </Link>
@@ -98,23 +91,29 @@ export default function Navbar() {
             <>
               {session ? (
                 <>
-                  {/* Profile icon / avatar */}
+                  {/* Profile avatar + name (desktop) */}
                   <Link
                     href="/dashboard"
-                    aria-label="Dashboard"
-                    className="hidden md:flex items-center justify-center w-10 h-10 rounded-lg hover:bg-outline-variant/10 text-on-surface dark:text-inverse-on-surface transition-colors overflow-hidden"
+                    className="hidden md:flex items-center gap-2 hover:bg-outline-variant/10 rounded-lg p-1 pr-2 text-on-surface dark:text-inverse-on-surface transition-colors"
                   >
-                    {session.user?.image ? (
-                      <Image
-                        src={session.user.image}
-                        alt={session.user.name || "User"}
-                        width={32}
-                        height={32}
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    ) : (
-                      <Person className="w-5 h-5" />
-                    )}
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                      {session.user?.image ? (
+                        <Image
+                          src={session.user.image}
+                          alt={session.user.name || "User"}
+                          width={32}
+                          height={32}
+                          className="w-8 h-8 object-cover rounded-full"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-primary-container/20 flex items-center justify-center rounded-full">
+                          <Person className="w-5 h-5" />
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-body-large font-medium truncate max-w-[120px]">
+                      {session.user?.name || "User"}
+                    </span>
                   </Link>
 
                   {/* Logout button – desktop only */}
@@ -128,12 +127,18 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  {/* Login button – desktop only */}
+                  {/* Login + Sign Up buttons – desktop only */}
                   <Link
                     href="/signin"
-                    className="hidden md:flex bg-primary text-on-primary px-6 py-2 rounded-lg font-semibold hover:opacity-90 transition-all"
+                    className="hidden md:flex bg-primary text-on-primary px-4 py-2 rounded-lg font-semibold hover:opacity-90 transition-all mr-2"
                   >
                     Login
+                  </Link>
+                  <Link
+                    href="/signup"
+                    className="hidden md:flex border border-primary text-primary px-4 py-2 rounded-lg font-semibold hover:bg-primary/5 dark:hover:bg-primary/10 transition-all"
+                  >
+                    Sign Up
                   </Link>
                 </>
               )}
@@ -185,8 +190,24 @@ export default function Navbar() {
                 className="flex items-center gap-3 py-3 px-4 rounded-lg text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low hover:text-primary dark:hover:text-primary-fixed-dim transition-all duration-200"
                 onClick={() => setMenuOpen(false)}
               >
-                <Person className="w-5 h-5" />
-                <span className="font-medium">Dashboard</span>
+                <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                  {session.user?.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      width={32}
+                      height={32}
+                      className="w-8 h-8 object-cover rounded-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-primary-container/20 flex items-center justify-center rounded-full">
+                      <Person className="w-5 h-5" />
+                    </div>
+                  )}
+                </div>
+                <span className="font-medium">
+                  {session.user?.name || "User"}
+                </span>
               </Link>
               <button
                 onClick={handleLogout}
@@ -206,6 +227,13 @@ export default function Navbar() {
                 onClick={() => setMenuOpen(false)}
               >
                 Login
+              </Link>
+              <Link
+                href="/signup"
+                className="w-full border border-primary text-primary py-3 rounded-lg font-semibold hover:bg-primary/5 transition-all mt-1 text-center block"
+                onClick={() => setMenuOpen(false)}
+              >
+                Sign Up
               </Link>
             </>
           )}

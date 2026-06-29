@@ -5,9 +5,9 @@ import Link from "next/link";
 
 export default function ArtworkCard({ artwork }) {
   return (
-    <Link href={`/artwork/${artwork.id}`} className="block group">
+    <Link href={`/artwork/${artwork.id}`} className="group h-full flex flex-col">
       <Card
-        className="bg-surface dark:bg-inverse-surface/40 rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/10 dark:border-outline-variant/5 cursor-pointer"
+        className="bg-surface dark:bg-inverse-surface/40 rounded-xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/10 dark:border-outline-variant/5 cursor-pointer h-full flex flex-col"
         shadow="none"
       >
         <div className="relative overflow-hidden">
@@ -30,12 +30,12 @@ export default function ArtworkCard({ artwork }) {
             <Heart className="w-4 h-4 sm:w-5 sm:h-5" />
           </Button>
         </div>
-        <div className="flex flex-col items-start p-3 sm:p-4">
+        <div className="flex flex-col items-start p-3 sm:p-4 flex-1 w-full">
           <h3 className="text-body-large sm:text-h3 font-h3 mb-1 text-on-surface dark:text-inverse-on-surface truncate w-full">{artwork.title}</h3>
           <p className="text-on-surface-variant dark:text-outline-variant font-body-small mb-2 sm:mb-4">
             by {artwork.artistName || artwork.artist || "Unknown Artist"}
           </p>
-          <div className="flex justify-between items-center w-full">
+          <div className="flex justify-between items-center w-full mt-auto">
             <span className="text-primary dark:text-primary-fixed-dim font-bold text-body-large sm:text-xl">
               ${artwork.price.toLocaleString()}
             </span>

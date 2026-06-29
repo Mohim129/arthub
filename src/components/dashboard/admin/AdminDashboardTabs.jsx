@@ -40,12 +40,15 @@ export default function AdminDashboardTabs() {
           const data = await response.json();
           setRawStats(data);
 
-          // fetch users to compute role-based counts
+          // fetch users to compute role-based counts and subscription tiers
           let usersData = users;
           try {
             if (!users || users.length === 0) {
               const usersRes = await fetch('/api/admin/users');
-              if (usersRes.ok) usersData = await usersRes.json();
+              if (usersRes.ok) {
+                usersData = await usersRes.json();
+                setUsers(usersData);
+              }
             }
           } catch (e) {
             // ignore user fetch errors — fallback to backend stats
@@ -217,13 +220,13 @@ export default function AdminDashboardTabs() {
             Performance overview for October 2024
           </p>
         </div>
-        <Button 
+        {/* <Button 
           onClick={handleExportReport}
           className="bg-primary dark:bg-primary-container text-on-primary px-lg py-sm rounded-lg shadow-sm hover:scale-95 transition-transform cursor-pointer"
         >
           <File className="mr-1" />
           Export Report
-        </Button>
+        </Button> */}
       </div>
 
       {tab === "analytics" && (
@@ -243,7 +246,7 @@ export default function AdminDashboardTabs() {
               </div>
             )}
           </section>
-          <AnalyticsCharts transactions={transactions} stats={rawStats} />
+          <AnalyticsCharts transactions={transactions} stats={rawStats} users={users} />
         </>
       )}
 

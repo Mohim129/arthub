@@ -406,7 +406,7 @@ export default function ArtworkDetailPage() {
                 {comments.map((comment) => (
                   <div
                     key={comment.id}
-                    className="flex gap-md p-md bg-white border border-surface-container rounded-xl shadow-sm"
+                    className="flex gap-md p-md bg-surface-container-lowest dark:bg-inverse-surface/40 border border-outline-variant/20 dark:border-outline-variant/10 rounded-xl shadow-sm"
                   >
                     <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container shrink-0">
                       {comment.userAvatar ? (

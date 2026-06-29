@@ -14,7 +14,7 @@ export default function CommentList({ comments }) {
       {comments.map((comment) => (
         <div
           key={comment.id}
-          className="flex gap-md p-md bg-white dark:bg-inverse-surface/40 border border-surface-container dark:border-outline-variant/10 rounded-xl shadow-sm"
+          className="flex gap-md p-md bg-surface-container-lowest dark:bg-inverse-surface/40 border border-outline-variant/20 dark:border-outline-variant/10 rounded-xl shadow-sm"
         >
           <div className="w-10 h-10 rounded-full overflow-hidden bg-surface-container dark:bg-inverse-surface shrink-0">
             <img

@@ -60,9 +60,11 @@ useEffect(() => {
 
     fetchTopArtists();
   }, []);
+  
 
   return (
     <>
+      
       <HeroCarousel />
 
       <section className="py-xl max-w-container-max mx-auto px-gutter">

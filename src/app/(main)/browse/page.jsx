@@ -138,7 +138,7 @@ export default function BrowsePage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-11 pr-md py-2 md:py-2.5 bg-surface-container-lowest dark:bg-inverse-surface/60 border border-outline-variant dark:border-outline-variant/30 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all font-body-large text-on-surface dark:text-inverse-on-surface placeholder:text-outline-variant/60"
-            placeholder="Search by title or artist..."
+            placeholder="Search by title..."
             type="text"
           />
         </div>
@@ -316,10 +316,10 @@ export default function BrowsePage() {
                   <Link
                     key={artwork.id}
                     href={`/artwork/${artwork.id}`}
-                    className="block group"
+                    className="group h-full flex flex-col"
                   >
                     <Card
-                      className="art-card-hover art-card-img-scale bg-surface-container-lowest dark:bg-inverse-surface/40 rounded-xl overflow-hidden transition-all duration-300 border border-outline-variant/20 dark:border-outline-variant/10 shadow-sm cursor-pointer"
+                      className="art-card-hover art-card-img-scale bg-surface-container-lowest dark:bg-inverse-surface/40 rounded-xl overflow-hidden transition-all duration-300 border border-outline-variant/20 dark:border-outline-variant/10 shadow-sm cursor-pointer h-full flex flex-col"
                       shadow="none"
                     >
                       <div className="relative aspect-square overflow-hidden bg-surface-variant">
@@ -348,17 +348,19 @@ export default function BrowsePage() {
                           </Button>
                         </div>
                       </div>
-                      <div className="p-sm md:p-md">
-                        <span className="text-[10px] md:text-label-caps font-label-caps text-secondary dark:text-secondary-fixed mb-xs block">
-                          {artwork.category}
-                        </span>
-                        <h3 className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors truncate">
-                          {artwork.title}
-                        </h3>
-                        <p className="font-body-small text-body-small text-on-surface-variant dark:text-outline-variant mt-xs">
-                          by {artwork.artistName || artwork.artist || "Unknown Artist"}
-                        </p>
-                        <div className="mt-sm pt-sm md:mt-md md:pt-md border-t border-outline-variant dark:border-outline-variant/20 flex justify-between items-center">
+                      <div className="p-sm md:p-md flex flex-col flex-1">
+                        <div>
+                          <span className="text-[10px] md:text-label-caps font-label-caps text-secondary dark:text-secondary-fixed mb-xs block">
+                            {artwork.category}
+                          </span>
+                          <h3 className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface group-hover:text-primary dark:group-hover:text-primary-fixed-dim transition-colors truncate">
+                            {artwork.title}
+                          </h3>
+                          <p className="font-body-small text-body-small text-on-surface-variant dark:text-outline-variant mt-xs">
+                            by {artwork.artistName || artwork.artist || "Unknown Artist"}
+                          </p>
+                        </div>
+                        <div className="mt-auto pt-sm md:pt-md border-t border-outline-variant dark:border-outline-variant/20 flex justify-between items-center">
                           <span className="text-body-large md:text-h3 font-h3 text-on-surface dark:text-inverse-on-surface">
                             ${typeof artwork.price === "number" ? artwork.price.toLocaleString() : artwork.price}
                           </span>
